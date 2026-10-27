@@ -4,6 +4,7 @@ credit is highly appreciated!]]
 
 local ScriptVersion = 5.6005
 local LastUsedVersion = ScriptVersion
+local IsBetaBuild = true
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right
 local GuiActive = true
@@ -15,9 +16,6 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local ContextActionService = game:GetService("ContextActionService")
 local LoadingState = "nil"
-warn("--- Script by Fixel, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
-print("Script version: "..ScriptVersion)
-print("Game Id: "..game.GameId)
 
 --Settings
 local ToolAnimHighPriorEnabled = false
@@ -168,7 +166,7 @@ if not IsInStudio then
 		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
 	end
 end
-if LaunchBetaBuild then
+if LaunchBetaBuild and not IsBetaBuild then
 	warn("LaunchBetaBuild setting enabled, Launching Beta build...")
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
 return
@@ -747,6 +745,9 @@ local LaunchIdDetectorButton
 local ResetButton
 local GithubLinkButton
 
+warn("--- Script by Fixel, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
+print("Script version: "..ScriptVersion)
+print("Game Id: "..game.GameId)
 local function CreateGui()
 	print("Loading Emoter GUI...")
 

@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.6005 -- Beta Build
+local ScriptVersion = 5.6005
 local LastUsedVersion = ScriptVersion
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right
@@ -27,6 +27,7 @@ local AnalyticsEnabled = true
 local LoadAnimationsOnRestart = true
 local LoadAllAnimationsOnRestart = false
 local TopMost = false
+local LaunchBetaBuild = false
 local DragDelay = 0.1
 
 local ToolIdleAnimHighPriorEnabled = false
@@ -126,6 +127,7 @@ if not IsInStudio then
 		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
 		TopMost = DecodedSettings.ConfTopMost
 		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
+		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
 
 		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
 		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
@@ -166,6 +168,11 @@ if not IsInStudio then
 		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
 	end
 end
+if LaunchBetaBuild then
+	warn("LaunchBetaBuild setting enabled, Launching Beta build...")
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
+return
+end	
 
 local function SaveData(Type)
 	local SettingsToSave = {
@@ -179,6 +186,7 @@ local function SaveData(Type)
 		ConfLoadAnimationsOnRestart = LoadAnimationsOnRestart,
 		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
 		ConfTopMost = TopMost,
+		ConfLaunchBetaBuild = LaunchBetaBuild,
 		ConfDragDelay = DragDelay,
 
 		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
@@ -493,7 +501,7 @@ function Notify(data)
 		Buttons.Choice1.UIStroke.Transparency = 1
 		Buttons.Choice2.UIStroke.Transparency = 1
 		task.wait()
-		
+
 		local OrderChange
 		OrderChange = NotificationsFrame.ChildRemoved:Connect(function()
 			Notification.LayoutOrder = Notification.LayoutOrder - 1
@@ -612,7 +620,7 @@ function Notify(data)
 		game:GetService("TweenService"):Create(Buttons.Choice2, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 		game:GetService("TweenService"):Create(Buttons.Choice1.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.9}):Play()
 		game:GetService("TweenService"):Create(Buttons.Choice2.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.9}):Play()
-		
+
 		if data.Title == "Loading data..." then --Case for loading notification
 			while wait() do
 				if LoadingState == "Loaded" then
@@ -621,7 +629,7 @@ function Notify(data)
 				end
 			end
 		end
-		
+
 		if data.Time ~= false then
 			local AutoWaitTime = math.min(math.max((#Description.Text * 0.05) + 2.5, 3), 10)
 			task.wait(data.Time or AutoWaitTime)
@@ -631,7 +639,7 @@ function Notify(data)
 				wait(1)
 			end
 		end
-		
+
 		if Closed then return end
 		CloseWindow()
 	end)
@@ -886,7 +894,7 @@ local function CreateGui()
 		ButtonCol = Color3.fromRGB(65, 65, 65)
 		ButtonSelectCol = Color3.fromRGB(129, 129, 129)
 	end
-	
+
 	if (Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15) then
 		EmoteWheelEmotes.Emote1 = "R15Wave"
 		EmoteWheelEmotes.Emote2 = "R15FortniteDance"
@@ -2019,7 +2027,7 @@ local function CreateGui()
 
 	-- Creating Objects
 	LoadingState = "Building Gui"
-	
+
 	Emoter.Name = "Emoter"
 	Emoter.ResetOnSpawn = false
 	Emoter.IgnoreGuiInset = true
@@ -3057,6 +3065,7 @@ local function CreateGui()
 	AddSettings(LoadAnimationsOnRestart, "LoadAnimationsOnRestartOption", "Play 'Running' & 'Idle' anims on reset", 0)
 	AddSettings(LoadAllAnimationsOnRestart, "LoadAllAnimationsOnRestartOption", "Play ALL animations on reset", 0)
 	AddSettings(TopMost, "TopMostOption", "Top most", 0)
+	AddSettings(LaunchBetaBuild, "LaunchBetaBuildOption", "Open Beta Build on launch*", 0)
 
 	AddSettings(ToolIdleAnimHighPriorEnabled, "ToolIdlePriorityOption", "High priority on ToolIdle anims", 1)
 	AddSettings(ToolActionAnimHighPriorEnabled, "ToolActionPriorityOption", "High priority on ToolAction anims", 1)
@@ -3230,12 +3239,12 @@ local function CreateGui()
 	GithubLinkButton.ImageColor3 = UiButColor
 	GithubLinkButton.Parent = MoreButtonsFrame
 	AddHoverText(GithubLinkButton, "Get the Github for Tutorials and more Info! (Copy Link)")
-	
-	
+
+
 	--Functions
 	--Hotkey Functions
 	LoadingState = "Loading Hotkeys"
-	
+
 	local function CloseGuiFunction()
 		if MainFrame.Visible == true then
 			SideFrame.Position = MainFrame.Position
@@ -3726,7 +3735,17 @@ local function CreateGui()
 			Emoter.DisplayOrder = -1
 			TopMostButton.CheckImage.Image = ""
 		end
-	end)	
+	end)
+	local LaunchBetaBuildButton = SettingsStuff.LaunchBetaBuildOption
+	AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\nP.S.: Beta version won't launch if stable one is higher")
+	LaunchBetaBuildButton.MouseButton1Click:Connect(function()
+		LaunchBetaBuild = not LaunchBetaBuild
+		if LaunchBetaBuild == true then
+			LaunchBetaBuildButton.CheckImage.Image = "rbxassetid://130396712201457"
+		else
+			LaunchBetaBuildButton.CheckImage.Image = ""
+		end
+	end)
 
 	if ToolIdleAnimHighPriorEnabled or ToolActionAnimHighPriorEnabled then
 		ToolAnimHighPriorEnabled = true
@@ -4730,7 +4749,7 @@ local function CreateGui()
 				warn("[SpecGameAnims Github]: Error in JSON structure in file")
 				return
 			end
-			
+
 			if data.AdditionalData and data.AdditionalData.Version then
 				GSGAOutput = GSGAOutput.." (<b>V "..data["AdditionalData"].Version..")</b>:\n"
 			else
@@ -4841,13 +4860,13 @@ local function CreateGui()
 				warn("[SpecGameAnims File]: Error in JSON structure in file")
 				return
 			end
-			
+
 			if data.AdditionalData and data.AdditionalData["Version"] then
 				LSGAOutput = LSGAOutput.." <b>(V: "..data["AdditionalData"].Version..")</b>:\n"
 			else
 				LSGAOutput = LSGAOutput..":\n"
 			end
-			
+
 			for categoryName, animationsList in pairs(data) do
 				if categoryName == "CustomEmotes" and #data["CustomEmotes"] ~= 0 then
 					if DebugInfoEnabled then print("[SpecGameAnims File]: Extracting Animations") end
@@ -4963,8 +4982,8 @@ local function CreateGui()
 	else
 		AddHoverText(SpecGameSection, "Specific game Animations")
 	end
-	
-	
+
+
 	--Emote wheel
 	LoadingState = "Setting up Emote wheel"
 	local function EmoteWheelButton(Button, AnimButtonName, KeyCode, ActionName)
@@ -5059,7 +5078,7 @@ local function CreateGui()
 	local UiStrokeParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimFrame", "HotkeysFrame", "SettingsFrame", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "ScrollingFrame", "ScrollingFrameR15", "ScrollingFrameSpecific", "OptionsFrame", "SearchFrame"}
 	local UiStroke1Parts = {"ResetButton", "PlayAnimButton", "IdBox", "HotkeysEditOption", "SaveSettingsButton", "LaunchIdDetectorButton", "GithubLinkButton", "SpeedValue", "SearchBox", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton"}
 	local UiGradientParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimBackButton", "BackButton", "CustomAnimFrame", "PlayAnimButton", "CustomAnimButton", "SettingsButton", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "SettingsButton", "DestroyGUI", "CloseGUI", "OptionsButton", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton", "SearchFrame", "SearchButton", "BackButton"}
-	
+
 	LoadingState = "Decorating Gui"
 	for _, UiPart in ipairs(Emoter:GetDescendants()) do
 		if table.find(UiCornerParts, UiPart.Name) and UICornerEnabled then
@@ -5233,7 +5252,7 @@ local function CreateGui()
 		end
 		GuiRestarted = true
 	end)
-	
+
 	LoadingState = "Loaded"
 	print("Script loaded!")
 end
@@ -5285,7 +5304,7 @@ function OnRestart()
 	PrevCustomAnimId = IdBox.Text
 
 	GuiEmoter:Destroy()
-	
+
 	local function Create()
 		local CreateGuiOk, result = pcall(function()
 			return CreateGui()
@@ -5313,7 +5332,7 @@ function OnRestart()
 	end
 end
 
-Notify({Title = "Loading data...", Text = "Please wait for Emoter BETA to load...", Time = 3})
+Notify({Title = "Loading data...", Text = "Please wait for Emoter to load...", Time = 3})
 
 --Launching the whole thing
 local CreateGuiOk, result = pcall(function()
@@ -5327,14 +5346,14 @@ if not CreateGuiOk then
 	LoadingState = "Loaded"
 	warn("[FATAL ERROR]: "..result)
 else
-	Notify({Title = "Welcome to Emoter Gui BETA!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
 	if LastUsedVersion < ScriptVersion then
 		Notify({Title = "Emoter got an update!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
-		Choice1Function = function() 
-			setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
-			Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
-		end, 
-		Image = 5832745500, Time = 5})
+			Choice1Function = function() 
+				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
+				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
+			end, 
+			Image = 5832745500, Time = 5})
 	end
 end
 if not IsInStudio then

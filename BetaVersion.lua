@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.6
+local ScriptVersion = 5.6005 -- Beta Build
 local LastUsedVersion = ScriptVersion
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right

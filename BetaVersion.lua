@@ -5313,7 +5313,7 @@ function OnRestart()
 	end
 end
 
-Notify({Title = "Loading data...", Text = "Please wait for Emoter to load...", Time = 3})
+Notify({Title = "Loading data...", Text = "Please wait for Emoter BETA to load...", Time = 3})
 
 --Launching the whole thing
 local CreateGuiOk, result = pcall(function()
@@ -5327,7 +5327,7 @@ if not CreateGuiOk then
 	LoadingState = "Loaded"
 	warn("[FATAL ERROR]: "..result)
 else
-	Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	Notify({Title = "Welcome to Emoter Gui BETA!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
 	if LastUsedVersion < ScriptVersion then
 		Notify({Title = "Emoter got an update!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
 		Choice1Function = function() 

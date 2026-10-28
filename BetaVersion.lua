@@ -5,6 +5,10 @@ credit is highly appreciated!]]
 local ScriptVersion = 5.6005
 local LastUsedVersion = ScriptVersion
 local IsBetaBuild = true
+local LatestVersion = nil
+local LatestBetaVersion = nil
+
+local ConnectedToInet = true
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right
 local GuiActive = true
@@ -77,208 +81,6 @@ ResetCharHotkey.Value = "DoubleR"
 
 DoubleHotkey.Value = "LeftControl" --A secondary key for activating a DoubleHotkey
 EmoteWheelHotkey.Value = "Comma" --Not affected by "Hotkeys Enabled" setting
-
-if AnalyticsEnabled and not IsInStudio then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Documentations%20%26%20Changelogs/CountHandler.lua",true))() end) end
--- P.S. This CountHandler made to see how many people are using this script and does NOT collect any other data. BUT if you let AnalyticsEnabled setting enabled you will get rid of one bug where specific settings couldn't load on first script execution
---Loading & Saving
-local IsDefaultSettings = true
-local ConfigFile = "EmoterData/EmoterConfig.json"
-if not IsInStudio then
-	local targetNumber = tostring(game.GameId)
-	local folderPath = "EmoterData/SpecificSettings"
-	local fileFound = false
-
-	local success, files = pcall(listfiles, folderPath)
-	if not success then
-		return
-	end
-	for _, filePath in ipairs(files) do
-		local fileName = filePath:match("[^/\\]+$") or filePath
-		local extractedNumber = fileName:match("(%d+)")
-
-		if extractedNumber then
-			if extractedNumber == targetNumber then
-				fileFound = true
-				ConfigFile = filePath
-				IsDefaultSettings = false
-				print("Found settings specifically for this game, loading...")
-				break
-			end
-		end
-	end
-
-	if isfile("EmoterData/EmoterConfig.json") then
-		local rawData = readfile("EmoterData/EmoterConfig.json")
-		local DecodedSettings = HttpService:JSONDecode(rawData)
-		if DecodedSettings.ConfLastUsedVersion then LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion) else LastUsedVersion = 5.5 end
-		if DecodedSettings.ConfLaunchedTimes then LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes) end
-		if DecodedSettings.ConfTotalTimeUsed then TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed) end
-	end
-	if isfile(ConfigFile) then
-		local rawData = readfile(ConfigFile)
-		local DecodedSettings = HttpService:JSONDecode(rawData)
-
-		AnimPreviewEnabled = DecodedSettings.ConfAnimPreviewEnabled
-		DebugInfoEnabled = DecodedSettings.ConfDebugInfoEnabled
-		AnalyticsEnabled = DecodedSettings.ConfAnalyticsEnabled
-		LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
-		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
-		TopMost = DecodedSettings.ConfTopMost
-		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
-		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
-
-		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
-		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
-		AnimSwitchModeEnabled = DecodedSettings.ConfAnimSwitchModeEnabled
-		AnimSwitchModeRunIdleExceptionEnabled = DecodedSettings.ConfAnimSwitchModeRunIdleExceptionEnabled
-		AnimSmoothFadeEnabled = DecodedSettings.ConfAnimSmoothFadeEnabled
-		HigherPriorityEnabled = DecodedSettings.ConfHigherPriorityEnabled
-
-		IdleTypeEnabled = DecodedSettings.ConfIdleTypeEnabled
-		RunningTypeEnabled = DecodedSettings.ConfRunningTypeEnabled
-		RunningTypeStopStandingEnabled = DecodedSettings.ConfRunningTypeStopStandingEnabled
-		RunningTypeCharSpeedEnabled = DecodedSettings.ConfRunningTypeCharSpeedEnabled
-		RunningTypeMinSpeedEnabled = DecodedSettings.ConfRunningTypeMinSpeedEnabled
-		RunningTypeStopJumpingEnabled = DecodedSettings.ConfRunningTypeStopJumpingEnabled
-		RunningTypeStopClimbingEnabled = DecodedSettings.ConfRunningTypeStopClimbingEnabled
-
-		Theme = DecodedSettings.ConfTheme
-		UIGradientEnabled = DecodedSettings.ConfUIGradientEnabled
-		UICornerEnabled = DecodedSettings.ConfUICornerEnabled
-		XSize = DecodedSettings.ConfXSize
-		YSize = DecodedSettings.ConfYSize
-
-		LoadGithubSGAEnabled = DecodedSettings.ConfLoadGithubSGAEnabled
-		LoadGithubCustomAnimsEnabled = DecodedSettings.ConfLoadGithubCustomAnimsEnabled
-		LoadLocalSGAEnabled = DecodedSettings.ConfLoadLocalSGAEnabled
-		LoadLocalCustomAnimsEnabled = DecodedSettings.ConfLoadLocalCustomAnimsEnabled
-
-		HotkeysEnabled = DecodedSettings.ConfHotkeysEnabled
-		if DecodedSettings.ConfDoubleHotkey then DoubleHotkey.Value = tostring(DecodedSettings.ConfDoubleHotkey) end
-		if DecodedSettings.ConfEmoteWheelHotkey then EmoteWheelHotkey.Value = tostring(DecodedSettings.ConfEmoteWheelHotkey) end
-		if DecodedSettings.ConfCloseHotkey then CloseHotkey.Value = tostring(DecodedSettings.ConfCloseHotkey) end
-		if DecodedSettings.ConfSettingsHotkey then SettingsHotkey.Value = tostring(DecodedSettings.ConfSettingsHotkey) end
-		if DecodedSettings.ConfSearchHotkey then SearchHotkey.Value = tostring(DecodedSettings.ConfSearchHotkey) end
-		if DecodedSettings.ConfSitHotkey then SitHotkey.Value = tostring(DecodedSettings.ConfSitHotkey) end
-		if DecodedSettings.ConfSwitchAnimHotkey then SwitchAnimHotkey.Value = tostring(DecodedSettings.ConfSwitchAnimHotkey) end
-		if DecodedSettings.ConfAnimFadeHotkey then AnimFadeHotkey.Value = tostring(DecodedSettings.ConfAnimFadeHotkey) end
-		if DecodedSettings.ConfStopAnimsHotkey then StopAnimsHotkey.Value = tostring(DecodedSettings.ConfStopAnimsHotkey) end
-		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
-	end
-end
-if LaunchBetaBuild and not IsBetaBuild then
-	warn("LaunchBetaBuild setting enabled, Launching Beta build...")
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
-return
-end	
-
-local function SaveData(Type)
-	local SettingsToSave = {
-		ConfLastUsedVersion = ScriptVersion,
-		ConfLaunchedTimes = LaunchedTimes,
-		ConfTotalTimeUsed = TotalTimeUsed,
-
-		ConfAnimPreviewEnabled = AnimPreviewEnabled,
-		ConfDebugInfoEnabled = DebugInfoEnabled,
-		ConfAnalyticsEnabled = AnalyticsEnabled,
-		ConfLoadAnimationsOnRestart = LoadAnimationsOnRestart,
-		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
-		ConfTopMost = TopMost,
-		ConfLaunchBetaBuild = LaunchBetaBuild,
-		ConfDragDelay = DragDelay,
-
-		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
-		ConfToolActionAnimHighPriorEnabled = ToolActionAnimHighPriorEnabled,
-		ConfAnimSwitchModeEnabled = AnimSwitchModeEnabled,
-		ConfAnimSwitchModeRunIdleExceptionEnabled = AnimSwitchModeRunIdleExceptionEnabled,
-		ConfAnimSmoothFadeEnabled = AnimSmoothFadeEnabled,
-		ConfHigherPriorityEnabled = HigherPriorityEnabled,
-
-		ConfIdleTypeEnabled = IdleTypeEnabled,
-		ConfRunningTypeEnabled = RunningTypeEnabled,
-		ConfRunningTypeStopStandingEnabled = RunningTypeStopStandingEnabled,
-		ConfRunningTypeCharSpeedEnabled = RunningTypeCharSpeedEnabled,
-		ConfRunningTypeMinSpeedEnabled = RunningTypeMinSpeedEnabled,
-		ConfRunningTypeStopJumpingEnabled = RunningTypeStopJumpingEnabled,
-		ConfRunningTypeStopClimbingEnabled = RunningTypeStopClimbingEnabled,
-
-		ConfTheme = Theme,
-		ConfUIGradientEnabled = UIGradientEnabled,
-		ConfUICornerEnabled = UICornerEnabled,
-		ConfXSize = XSize,
-		ConfYSize = YSize,
-
-		ConfLoadGithubSGAEnabled = LoadGithubSGAEnabled,
-		ConfLoadGithubCustomAnimsEnabled = LoadGithubCustomAnimsEnabled,
-		ConfLoadLocalSGAEnabled = LoadLocalSGAEnabled,
-		ConfLoadLocalCustomAnimsEnabled = LoadLocalCustomAnimsEnabled,
-
-		ConfHotkeysEnabled = HotkeysEnabled,
-		ConfDoubleHotkey = DoubleHotkey.Value,
-		ConfEmoteWheelHotkey = EmoteWheelHotkey.Value,
-		ConfCloseHotkey = CloseHotkey.Value,
-		ConfSettingsHotkey = SettingsHotkey.Value,
-		ConfSearchHotkey = SearchHotkey.Value,
-		ConfSitHotkey = SitHotkey.Value,
-		ConfSwitchAnimHotkey = SwitchAnimHotkey.Value,
-		ConfAnimFadeHotkey = AnimFadeHotkey.Value,
-		ConfStopAnimsHotkey = StopAnimsHotkey.Value,
-		ConfResetCharHotkey = ResetCharHotkey.Value
-	}
-	local encodedData = HttpService:JSONEncode(SettingsToSave)
-
-	if Type == "Default" then
-		writefile("EmoterData/EmoterConfig.json", encodedData)
-		Notify({Title = "Saved", Text = "Succesfully saved settings!", Time = 3})
-	elseif Type == "Specific" then
-		local targetNumber = tostring(game.GameId)
-		local folderPath = "EmoterData/SpecificSettings"
-		local fileFound = false
-
-		local success, files = pcall(listfiles, folderPath)
-		if not success then
-			return
-		end
-		for _, filePath in ipairs(files) do
-			local fileName = filePath:match("[^/\\]+$") or filePath
-			local extractedNumber = fileName:match("(%d+)")
-
-			if extractedNumber then
-				if extractedNumber == targetNumber then
-					fileFound = true
-					ConfigFile = filePath
-					print("Found settings specifically for this game, saving...")
-					break
-				end
-			end
-		end
-		if not fileFound then
-			ConfigFile = "EmoterData/SpecificSettings/"..targetNumber.." (".. game:GetService("MarketplaceService"):GetProductInfoAsync(game.PlaceId).Name ..").json"
-		end
-
-		writefile(ConfigFile, encodedData)
-		Notify({Title = "Saved", Text = "Succesfully saved settings for specific game!", Time = 3})
-	elseif Type == "Update" then
-		local DecodedData
-		if isfile("EmoterData/EmoterConfig.json") then
-			local rawData = readfile("EmoterData/EmoterConfig.json")
-			DecodedData = HttpService:JSONDecode(rawData)
-		else
-			DecodedData = {}
-		end
-
-		DecodedData.ConfLaunchedTimes = LaunchedTimes + 1
-		DecodedData.ConfLastUsedVersion = ScriptVersion
-		DecodedData.ConfTotalTimeUsed = TotalTimeUsed
-
-		if isfile("EmoterData/EmoterConfig.json") then
-			local UpdatedData = HttpService:JSONEncode(DecodedData)
-			writefile("EmoterData/EmoterConfig.json", UpdatedData)
-		else
-			writefile("EmoterData/EmoterConfig.json", encodedData)
-		end
-	end
-end
 
 local NotificationsSystem
 local function CreateNotificationsFrame()
@@ -456,13 +258,11 @@ function Notify(data)
 		UICorner2.TopLeftRadius = UDim.new(0, 0)
 		UICorner2.BottomLeftRadius = UDim.new(0, 0)
 		UICorner2.Parent = Choice2
-
 		local UIStroke2 = Instance.new("UIStroke")
 		UIStroke2.Color = Color3.fromRGB(255, 255, 255)
 		UIStroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		UIStroke2.Transparency = 0.9
 		UIStroke2.Parent = Choice2
-
 		local UIListLayout = Instance.new("UIListLayout")
 		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
 		UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -470,14 +270,12 @@ function Notify(data)
 		UIListLayout.HorizontalFlex = Enum.UIFlexAlignment.Fill
 		UIListLayout.Padding = UDim.new(0, 2)
 		UIListLayout.Parent = Buttons
-
 		local UIListLayout1 = Instance.new("UIListLayout")
 		UIListLayout1.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		UIListLayout1.VerticalAlignment = Enum.VerticalAlignment.Bottom
 		UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout1.Padding = UDim.new(0, 2)
 		UIListLayout1.Parent = Notification
-
 
 		-- Set Data
 		local Main = Notification.Main
@@ -621,7 +419,7 @@ function Notify(data)
 
 		if data.Title == "Loading data..." then --Case for loading notification
 			while wait() do
-				if LoadingState == "Loaded" then
+				if LoadingState == "Loaded" or LoadingState == "LaunchingBeta" then
 					CloseWindow()
 					return
 				end
@@ -641,6 +439,227 @@ function Notify(data)
 		if Closed then return end
 		CloseWindow()
 	end)
+end
+
+Notify({Title = "Loading data...", Text = "Please wait for Emoter to load...", Time = 3})
+
+print("Getting Emoter Metadata...")
+LoadingState = "Preloading"
+if AnalyticsEnabled and not IsInStudio then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Documentations%20%26%20Changelogs/CountHandler.lua",true))() end) end
+-- P.S. This CountHandler made to see how many people are using this script and does NOT collect any other data. BUT if you let AnalyticsEnabled setting enabled you will get rid of one bug where specific settings couldn't load on first script execution
+local MetadataSuccess, MetadataContent = pcall(function()
+	return game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Metadata.json")
+end)
+if not MetadataSuccess or MetadataContent == "404: Not Found" then
+	if DebugInfoEnabled then warn("[AdditionalAnims File]: An error ocurred while trying to get metadata") end
+	ConnectedToInet = false
+	return 
+end
+local MetadataSuccess2, MetadataData = pcall(function()
+	return HttpService:JSONDecode(MetadataContent)
+end)
+LatestVersion = MetadataData["LatestVersion"]
+LatestBetaVersion = MetadataData["LatestBetaVersion"]
+
+--Loading & Saving
+local IsDefaultSettings = true
+local ConfigFile = "EmoterData/EmoterConfig.json"
+if not IsInStudio then
+	local targetNumber = tostring(game.GameId)
+	local folderPath = "EmoterData/SpecificSettings"
+	local fileFound = false
+
+	local success, files = pcall(listfiles, folderPath)
+	if not success then
+		return
+	end
+	for _, filePath in ipairs(files) do
+		local fileName = filePath:match("[^/\\]+$") or filePath
+		local extractedNumber = fileName:match("(%d+)")
+
+		if extractedNumber then
+			if extractedNumber == targetNumber then
+				fileFound = true
+				ConfigFile = filePath
+				IsDefaultSettings = false
+				print("Found settings specifically for this game, loading...")
+				break
+			end
+		end
+	end
+
+	if isfile("EmoterData/EmoterConfig.json") then
+		local rawData = readfile("EmoterData/EmoterConfig.json")
+		local DecodedSettings = HttpService:JSONDecode(rawData)
+		if DecodedSettings.ConfLastUsedVersion then LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion) else LastUsedVersion = 5.5 end
+		if DecodedSettings.ConfLaunchedTimes then LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes) end
+		if DecodedSettings.ConfTotalTimeUsed then TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed) end
+	end
+	if isfile(ConfigFile) then
+		local rawData = readfile(ConfigFile)
+		local DecodedSettings = HttpService:JSONDecode(rawData)
+
+		AnimPreviewEnabled = DecodedSettings.ConfAnimPreviewEnabled
+		DebugInfoEnabled = DecodedSettings.ConfDebugInfoEnabled
+		AnalyticsEnabled = DecodedSettings.ConfAnalyticsEnabled
+		LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
+		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
+		TopMost = DecodedSettings.ConfTopMost
+		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
+		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
+
+		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
+		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
+		AnimSwitchModeEnabled = DecodedSettings.ConfAnimSwitchModeEnabled
+		AnimSwitchModeRunIdleExceptionEnabled = DecodedSettings.ConfAnimSwitchModeRunIdleExceptionEnabled
+		AnimSmoothFadeEnabled = DecodedSettings.ConfAnimSmoothFadeEnabled
+		HigherPriorityEnabled = DecodedSettings.ConfHigherPriorityEnabled
+
+		IdleTypeEnabled = DecodedSettings.ConfIdleTypeEnabled
+		RunningTypeEnabled = DecodedSettings.ConfRunningTypeEnabled
+		RunningTypeStopStandingEnabled = DecodedSettings.ConfRunningTypeStopStandingEnabled
+		RunningTypeCharSpeedEnabled = DecodedSettings.ConfRunningTypeCharSpeedEnabled
+		RunningTypeMinSpeedEnabled = DecodedSettings.ConfRunningTypeMinSpeedEnabled
+		RunningTypeStopJumpingEnabled = DecodedSettings.ConfRunningTypeStopJumpingEnabled
+		RunningTypeStopClimbingEnabled = DecodedSettings.ConfRunningTypeStopClimbingEnabled
+
+		Theme = DecodedSettings.ConfTheme
+		UIGradientEnabled = DecodedSettings.ConfUIGradientEnabled
+		UICornerEnabled = DecodedSettings.ConfUICornerEnabled
+		XSize = DecodedSettings.ConfXSize
+		YSize = DecodedSettings.ConfYSize
+
+		LoadGithubSGAEnabled = DecodedSettings.ConfLoadGithubSGAEnabled
+		LoadGithubCustomAnimsEnabled = DecodedSettings.ConfLoadGithubCustomAnimsEnabled
+		LoadLocalSGAEnabled = DecodedSettings.ConfLoadLocalSGAEnabled
+		LoadLocalCustomAnimsEnabled = DecodedSettings.ConfLoadLocalCustomAnimsEnabled
+
+		HotkeysEnabled = DecodedSettings.ConfHotkeysEnabled
+		if DecodedSettings.ConfDoubleHotkey then DoubleHotkey.Value = tostring(DecodedSettings.ConfDoubleHotkey) end
+		if DecodedSettings.ConfEmoteWheelHotkey then EmoteWheelHotkey.Value = tostring(DecodedSettings.ConfEmoteWheelHotkey) end
+		if DecodedSettings.ConfCloseHotkey then CloseHotkey.Value = tostring(DecodedSettings.ConfCloseHotkey) end
+		if DecodedSettings.ConfSettingsHotkey then SettingsHotkey.Value = tostring(DecodedSettings.ConfSettingsHotkey) end
+		if DecodedSettings.ConfSearchHotkey then SearchHotkey.Value = tostring(DecodedSettings.ConfSearchHotkey) end
+		if DecodedSettings.ConfSitHotkey then SitHotkey.Value = tostring(DecodedSettings.ConfSitHotkey) end
+		if DecodedSettings.ConfSwitchAnimHotkey then SwitchAnimHotkey.Value = tostring(DecodedSettings.ConfSwitchAnimHotkey) end
+		if DecodedSettings.ConfAnimFadeHotkey then AnimFadeHotkey.Value = tostring(DecodedSettings.ConfAnimFadeHotkey) end
+		if DecodedSettings.ConfStopAnimsHotkey then StopAnimsHotkey.Value = tostring(DecodedSettings.ConfStopAnimsHotkey) end
+		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
+	end
+end
+if ConnectedToInet and LaunchBetaBuild and not IsBetaBuild and LatestBetaVersion > LatestVersion then
+	warn("LaunchBetaBuild setting enabled and Beta version is higher than stable version, Launching Beta build...")
+	LoadingState = "LaunchingBeta"
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
+	return
+end	
+
+local function SaveData(Type)
+	local SettingsToSave = {
+		ConfLastUsedVersion = ScriptVersion,
+		ConfLaunchedTimes = LaunchedTimes,
+		ConfTotalTimeUsed = TotalTimeUsed,
+
+		ConfAnimPreviewEnabled = AnimPreviewEnabled,
+		ConfDebugInfoEnabled = DebugInfoEnabled,
+		ConfAnalyticsEnabled = AnalyticsEnabled,
+		ConfLoadAnimationsOnRestart = LoadAnimationsOnRestart,
+		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
+		ConfTopMost = TopMost,
+		ConfLaunchBetaBuild = LaunchBetaBuild,
+		ConfDragDelay = DragDelay,
+
+		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
+		ConfToolActionAnimHighPriorEnabled = ToolActionAnimHighPriorEnabled,
+		ConfAnimSwitchModeEnabled = AnimSwitchModeEnabled,
+		ConfAnimSwitchModeRunIdleExceptionEnabled = AnimSwitchModeRunIdleExceptionEnabled,
+		ConfAnimSmoothFadeEnabled = AnimSmoothFadeEnabled,
+		ConfHigherPriorityEnabled = HigherPriorityEnabled,
+
+		ConfIdleTypeEnabled = IdleTypeEnabled,
+		ConfRunningTypeEnabled = RunningTypeEnabled,
+		ConfRunningTypeStopStandingEnabled = RunningTypeStopStandingEnabled,
+		ConfRunningTypeCharSpeedEnabled = RunningTypeCharSpeedEnabled,
+		ConfRunningTypeMinSpeedEnabled = RunningTypeMinSpeedEnabled,
+		ConfRunningTypeStopJumpingEnabled = RunningTypeStopJumpingEnabled,
+		ConfRunningTypeStopClimbingEnabled = RunningTypeStopClimbingEnabled,
+
+		ConfTheme = Theme,
+		ConfUIGradientEnabled = UIGradientEnabled,
+		ConfUICornerEnabled = UICornerEnabled,
+		ConfXSize = XSize,
+		ConfYSize = YSize,
+
+		ConfLoadGithubSGAEnabled = LoadGithubSGAEnabled,
+		ConfLoadGithubCustomAnimsEnabled = LoadGithubCustomAnimsEnabled,
+		ConfLoadLocalSGAEnabled = LoadLocalSGAEnabled,
+		ConfLoadLocalCustomAnimsEnabled = LoadLocalCustomAnimsEnabled,
+
+		ConfHotkeysEnabled = HotkeysEnabled,
+		ConfDoubleHotkey = DoubleHotkey.Value,
+		ConfEmoteWheelHotkey = EmoteWheelHotkey.Value,
+		ConfCloseHotkey = CloseHotkey.Value,
+		ConfSettingsHotkey = SettingsHotkey.Value,
+		ConfSearchHotkey = SearchHotkey.Value,
+		ConfSitHotkey = SitHotkey.Value,
+		ConfSwitchAnimHotkey = SwitchAnimHotkey.Value,
+		ConfAnimFadeHotkey = AnimFadeHotkey.Value,
+		ConfStopAnimsHotkey = StopAnimsHotkey.Value,
+		ConfResetCharHotkey = ResetCharHotkey.Value
+	}
+	local encodedData = HttpService:JSONEncode(SettingsToSave)
+
+	if Type == "Default" then
+		writefile("EmoterData/EmoterConfig.json", encodedData)
+		Notify({Title = "Saved", Text = "Succesfully saved settings!", Time = 3})
+	elseif Type == "Specific" then
+		local targetNumber = tostring(game.GameId)
+		local folderPath = "EmoterData/SpecificSettings"
+		local fileFound = false
+
+		local success, files = pcall(listfiles, folderPath)
+		if not success then
+			return
+		end
+		for _, filePath in ipairs(files) do
+			local fileName = filePath:match("[^/\\]+$") or filePath
+			local extractedNumber = fileName:match("(%d+)")
+
+			if extractedNumber then
+				if extractedNumber == targetNumber then
+					fileFound = true
+					ConfigFile = filePath
+					print("Found settings specifically for this game, saving...")
+					break
+				end
+			end
+		end
+		if not fileFound then
+			ConfigFile = "EmoterData/SpecificSettings/"..targetNumber.." (".. game:GetService("MarketplaceService"):GetProductInfoAsync(game.PlaceId).Name ..").json"
+		end
+
+		writefile(ConfigFile, encodedData)
+		Notify({Title = "Saved", Text = "Succesfully saved settings for specific game!", Time = 3})
+	elseif Type == "Update" then
+		local DecodedData
+		if isfile("EmoterData/EmoterConfig.json") then
+			local rawData = readfile("EmoterData/EmoterConfig.json")
+			DecodedData = HttpService:JSONDecode(rawData)
+		else
+			DecodedData = {}
+		end
+
+		DecodedData.ConfLaunchedTimes = LaunchedTimes + 1
+		DecodedData.ConfLastUsedVersion = ScriptVersion
+		DecodedData.ConfTotalTimeUsed = TotalTimeUsed
+
+		if isfile("EmoterData/EmoterConfig.json") then
+			local UpdatedData = HttpService:JSONEncode(DecodedData)
+			writefile("EmoterData/EmoterConfig.json", UpdatedData)
+		else
+			writefile("EmoterData/EmoterConfig.json", encodedData)
+		end
+	end
 end
 
 local BgColor = Color3.fromRGB(137, 165, 255)
@@ -2801,6 +2820,9 @@ local function CreateGui()
 	GuiName.Font = Enum.Font.Highway
 	GuiName.TextColor3 = UiButColor
 	GuiName.Parent = SettingsFrame
+	if IsBetaBuild then
+		GuiName.Text = "Emoter BETA"
+	end
 
 	AutorText.Name = "AutorText"
 	AutorText.AnchorPoint = Vector2.new(0.5, 0)
@@ -5333,8 +5355,6 @@ function OnRestart()
 	end
 end
 
-Notify({Title = "Loading data...", Text = "Please wait for Emoter to load...", Time = 3})
-
 --Launching the whole thing
 local CreateGuiOk, result = pcall(function()
 	return CreateGui()
@@ -5347,9 +5367,14 @@ if not CreateGuiOk then
 	LoadingState = "Loaded"
 	warn("[FATAL ERROR]: "..result)
 else
-	Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	if not IsBetaBuild then
+		Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	else
+		Notify({Title = "Welcome to Emoter BETA!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	end
+	
 	if LastUsedVersion < ScriptVersion and not IsBetaBuild then
-		Notify({Title = "Emoter got an update!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
+		Notify({Title = "Emoter updated!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
 			Choice1Function = function() 
 				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
 				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
@@ -5357,6 +5382,9 @@ else
 			Image = 5832745500, Time = 5})
 	elseif IsBetaBuild then
 		Notify({Title = "Thank you for joining BETA Test!", Text = "This version may be unstable and can have critical bugs. If you encounter any bug, <b>PLEASE</b> feel free to report it in <b>Issues</b> section of my Github project! You can always disable Beta test in settings"})
+	end
+	if LatestVersion > ScriptVersion and not IsBetaBuild then
+		Notify({Title = "Outdated version!", Text = "You are using an outdated version of Emoter GUI. Please check my Github to get newer version (link in settings)", Time = 5})
 	end
 end
 if not IsInStudio then

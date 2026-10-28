@@ -1,3 +1,9 @@
+(Changelog for BETA version will be added here later)
+
+### V5.57:
+- Added BETA Test. You can access it by enabling it's setting in Settings
+- Added metadata. With it you will be informed if you are using an outdated version, and (maybe) chance of specific game settings loading from file on first launch will be higher, if not 100%
+
 ### V5.55:
 - Added local launches counter which may be used later
 - Now you will be notificated if you are using newer version

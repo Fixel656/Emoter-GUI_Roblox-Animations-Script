@@ -2,10 +2,15 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.55
+local ScriptVersion = 5.57
 local LastUsedVersion = ScriptVersion
+local IsBetaBuild = false
+local LatestVersion = nil
+local LatestBetaVersion = nil
+
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right
+local ConnectedToInet = true
 local GuiActive = true
 local GuiEmoter = nil
 local AnimationHandler = "Animate"
@@ -14,9 +19,6 @@ local IsInStudio = game:GetService("RunService"):IsStudio()
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local ContextActionService = game:GetService("ContextActionService")
-print("--- Script by Fixel656, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
-print("Script version: "..ScriptVersion)
-print("Game Id: "..game.GameId)
 
 --Settings
 local ToolAnimHighPriorEnabled = false
@@ -26,6 +28,7 @@ local AnalyticsEnabled = true
 local LoadAnimationsOnRestart = true
 local LoadAllAnimationsOnRestart = false
 local TopMost = false
+local LaunchBetaBuild = false
 local DragDelay = 0.1
 
 local ToolIdleAnimHighPriorEnabled = false
@@ -78,8 +81,23 @@ ResetCharHotkey.Value = "DoubleR"
 DoubleHotkey.Value = "LeftControl" --A secondary key for activating a DoubleHotkey
 EmoteWheelHotkey.Value = "Comma" --Not affected by "Hotkeys Enabled" setting
 
+print("Getting Emoter Metadata...")
 if AnalyticsEnabled and not IsInStudio then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Documentations%20%26%20Changelogs/CountHandler.lua",true))() end) end
 -- P.S. This CountHandler made to see how many people are using this script and does NOT collect any other data. BUT if you let AnalyticsEnabled setting enabled you will get rid of one bug where specific settings couldn't load on first script execution
+local MetadataSuccess, MetadataContent = pcall(function()
+	return game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Metadata.json")
+end)
+if not MetadataSuccess or MetadataContent == "404: Not Found" then
+	if DebugInfoEnabled then warn("[AdditionalAnims File]: An error ocurred while trying to get metadata") end
+	ConnectedToInet = false
+	return 
+end
+local MetadataSuccess2, MetadataData = pcall(function()
+	return HttpService:JSONDecode(MetadataContent)
+end)
+LatestVersion = MetadataData["LatestVersion"]
+LatestBetaVersion = MetadataData["LatestBetaVersion"]
+
 --Loading & Saving
 local IsDefaultSettings = true
 local ConfigFile = "EmoterData/EmoterConfig.json"
@@ -106,7 +124,7 @@ if not IsInStudio then
 			end
 		end
 	end
-	
+
 	if isfile("EmoterData/EmoterConfig.json") then
 		local rawData = readfile("EmoterData/EmoterConfig.json")
 		local DecodedSettings = HttpService:JSONDecode(rawData)
@@ -117,13 +135,14 @@ if not IsInStudio then
 	if isfile(ConfigFile) then
 		local rawData = readfile(ConfigFile)
 		local DecodedSettings = HttpService:JSONDecode(rawData)
-		
+
 		AnimPreviewEnabled = DecodedSettings.ConfAnimPreviewEnabled
 		DebugInfoEnabled = DecodedSettings.ConfDebugInfoEnabled
 		AnalyticsEnabled = DecodedSettings.ConfAnalyticsEnabled
 		LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
 		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
 		TopMost = DecodedSettings.ConfTopMost
+		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
 		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
 
 		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
@@ -165,19 +184,25 @@ if not IsInStudio then
 		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
 	end
 end
+if ConnectedToInet and LaunchBetaBuild and not IsBetaBuild and LatestBetaVersion > LatestVersion then
+	warn("LaunchBetaBuild setting enabled and Beta version is higher than stable version, Launching Beta build...")
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
+	return
+end	
 
 local function SaveData(Type)
 	local SettingsToSave = {
 		ConfLastUsedVersion = ScriptVersion,
 		ConfLaunchedTimes = LaunchedTimes,
 		ConfTotalTimeUsed = TotalTimeUsed,
-		
+
 		ConfAnimPreviewEnabled = AnimPreviewEnabled,
 		ConfDebugInfoEnabled = DebugInfoEnabled,
 		ConfAnalyticsEnabled = AnalyticsEnabled,
 		ConfLoadAnimationsOnRestart = LoadAnimationsOnRestart,
 		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
 		ConfTopMost = TopMost,
+		ConfLaunchBetaBuild = LaunchBetaBuild,
 		ConfDragDelay = DragDelay,
 
 		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
@@ -254,11 +279,11 @@ local function SaveData(Type)
 	elseif Type == "Update" then
 		local rawData = readfile("EmoterData/EmoterConfig.json")
 		local DecodedData = HttpService:JSONDecode(rawData)
-		
+
 		DecodedData.ConfLaunchedTimes = LaunchedTimes + 1
 		DecodedData.ConfLastUsedVersion = ScriptVersion
 		DecodedData.ConfTotalTimeUsed = TotalTimeUsed
-		
+
 		local UpdatedData = HttpService:JSONEncode(DecodedData)
 		writefile("EmoterData/EmoterConfig.json", UpdatedData)
 	end
@@ -387,6 +412,9 @@ local LaunchIdDetectorButton
 local ResetButton
 local GithubLinkButton
 
+print("--- Script by Fixel656, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
+print("Script version: "..ScriptVersion)
+print("Game Id: "..game.GameId)
 local function CreateGui()
 	print("Loading Emoter GUI...")
 
@@ -2664,6 +2692,7 @@ local function CreateGui()
 	AddSettings(AnalyticsEnabled, "AnalyticsOption", "Enable analytics (hover for info)", 0)
 	AddSettings(LoadAnimationsOnRestart, "LoadAnimationsOnRestartOption", "Play 'Running' & 'Idle' anims on reset", 0)
 	AddSettings(LoadAllAnimationsOnRestart, "LoadAllAnimationsOnRestartOption", "Play ALL animations on reset", 0)
+	AddSettings(LaunchBetaBuild, "LaunchBetaBuildOption", "Join BETA test*", 0)
 	AddSettings(TopMost, "TopMostOption", "Top most", 0)
 
 	AddSettings(ToolIdleAnimHighPriorEnabled, "ToolIdlePriorityOption", "High priority on ToolIdle anims", 1)
@@ -2856,7 +2885,7 @@ local function CreateGui()
 			game.TweenService:Create(MFUIScale, TweenInfo.new(.15, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Scale = 1}):Play()
 			SFUIScale.Scale = 1.2
 		end
-		
+
 		SFHideTimeCount = 0
 		SideFrame.GroupTransparency = 0
 		SideFrame.UIStroke.Transparency = 0
@@ -2971,7 +3000,7 @@ local function CreateGui()
 		Title.Text = "Emoter GUI (R6)"
 		SideFrameTitle.Text = "Emoter GUI (R6)"
 	end
-	
+
 	task.spawn(function()
 		while GuiActive and not GuiRestarted do
 			SFHideTimeCount = SFHideTimeCount + 1
@@ -3334,7 +3363,22 @@ local function CreateGui()
 			Emoter.DisplayOrder = -1
 			TopMostButton.CheckImage.Image = ""
 		end
-	end)	
+	end)
+	local LaunchBetaBuildButton = SettingsStuff.LaunchBetaBuildOption
+	if LatestBetaVersion > LatestVersion then
+		AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\nP.S.: Beta version won't launch if stable one is higher")
+	else
+		AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\n<b>Currently Beta version is lower than stable one, no need to launch")
+	end
+	
+	LaunchBetaBuildButton.MouseButton1Click:Connect(function()
+		LaunchBetaBuild = not LaunchBetaBuild
+		if LaunchBetaBuild == true then
+			LaunchBetaBuildButton.CheckImage.Image = "rbxassetid://130396712201457"
+		else
+			LaunchBetaBuildButton.CheckImage.Image = ""
+		end
+	end)
 
 	if ToolIdleAnimHighPriorEnabled or ToolActionAnimHighPriorEnabled then
 		ToolAnimHighPriorEnabled = true
@@ -4354,7 +4398,7 @@ local function CreateGui()
 				return game:HttpGet(finalUrl)
 			end)
 			if not success or not fileContent or fileContent == "404: Not Found" then
-				if DebugInfoEnabled then warn("[AdditionalAnims File]: AdditionalAnims file wasn't found") end
+				if DebugInfoEnabled then warn("[AdditionalAnims File]: Error 404 Occurred while trying to get file") end
 				return 
 			end
 			local success2, data = pcall(function()
@@ -4937,7 +4981,7 @@ local function CreateGui()
 	if FirstLaunch then
 		game.TweenService:Create(MFUIScale, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Scale = 1}):Play()
 	end
-	
+
 	if FirstLaunch then
 		MFUIScale.Scale = 0
 	end
@@ -5055,7 +5099,13 @@ if not CreateGuiOk then
 else
 	game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Succesfully loaded!", Text = "Check Console for info (F9)", Duration = 5})
 	if LastUsedVersion < ScriptVersion then
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Emoter Upated!", Text = "Check Changelog in my Github", Duration = 5, Icon = "rbxassetid://5832745500"})
+		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Beta test Available!", Text = "Check Settings no enable", Duration = 5})
+	end
+	if LastUsedVersion < ScriptVersion then
+		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Emoter Updated!", Text = "Check Changelog in my Github", Duration = 5, Icon = "rbxassetid://5832745500"})
+	end
+	if LatestVersion > ScriptVersion and not IsBetaBuild then
+		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Outdated version!", Text = "Please check my Github to get newer version", Duration = 5})
 	end
 end
 if not IsInStudio then

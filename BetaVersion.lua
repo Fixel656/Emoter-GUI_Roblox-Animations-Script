@@ -5348,13 +5348,15 @@ if not CreateGuiOk then
 	warn("[FATAL ERROR]: "..result)
 else
 	Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
-	if LastUsedVersion < ScriptVersion then
+	if LastUsedVersion < ScriptVersion and not IsBetaBuild then
 		Notify({Title = "Emoter got an update!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
 			Choice1Function = function() 
 				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
 				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
 			end, 
 			Image = 5832745500, Time = 5})
+	elseif IsBetaBuild then
+		Notify({Title = "Thank you for joining BETA Test!", Text = "This version may be unstable and can have critical bugs. If you encounter any bug, <b>PLEASE</b> feel free to report it in <b>Issues</b> section of my Github project! You can always disable Beta test in settings"})
 	end
 end
 if not IsInStudio then

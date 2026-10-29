@@ -4,7 +4,7 @@
 
 <div align="center">
  
-**(5k+ of new users! Thank you for using my script!)**
+**(10k+ of new users! Thank you so much for using my script!)**
 </div>
 
 - [FAQ](https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/FAQ.md)

@@ -1,9 +1,10 @@
-<p align="center">
- <img width="250" height="140" alt="EmoterLogo4" src="https://github.com/user-attachments/assets/310058f6-c9ed-4321-84ed-853f696ba468" />
-</p>
-
 <div align="center">
+ <img width="250" height="140" alt="EmoterLogo4" src="https://github.com/user-attachments/assets/310058f6-c9ed-4321-84ed-853f696ba468" /><br>
  
+[![Reviewed on ScriptBlox](https://scriptblox.com/badge/Universal-Script-Emoter-GUI-an-Ultimate-animations-GUI-(R6R15)-225868)](https://scriptblox.com/script/Universal-Script-Emoter-GUI-an-Ultimate-animations-GUI-(R6R15)-225868)<br>
+</div>
+<div align="center">
+
 **(10k+ of new users! Thank you so much for using my script!)**
 </div>
 

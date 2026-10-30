@@ -1,4 +1,12 @@
-(Changelog for BETA version will be added here later)
+## V5.6 BETA:
+- Changed Animations adding functions inside script (doesn't affect ANY SGA, maded mostly for optimizations and to prevent some possible errors to appear later)
+- Added NEW notifications system. Actually, it's taken from Rayfield, but fixed, updated and with new functions
+- Now when a critical error occurs, the state in which it happened is showed. Also you can press "Launch again" button to try launching again
+- Added versions to SGA files
+- Changed looped state for some R15 animations
+- Made some changes for PauseAnims functions, still a bit unstable
+- Added "Show Specific category on launch" Setting
+- Fixed error when a settings file is missing
 
 ### V5.57:
 - Added BETA Test. You can access it by enabling it's setting in Settings

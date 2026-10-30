@@ -2,9 +2,9 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.6005
+local ScriptVersion = 5.6
 local LastUsedVersion = ScriptVersion
-local IsBetaBuild = true
+local IsBetaBuild = false
 local LatestVersion = nil
 local LatestBetaVersion = nil
 
@@ -30,7 +30,7 @@ local LoadAnimationsOnRestart = true
 local LoadAllAnimationsOnRestart = false
 local TopMost = false
 local LaunchBetaBuild = false
-local DragDelay = 0.1
+local SpecCategoryOnLaunch = true
 
 local ToolIdleAnimHighPriorEnabled = false
 local ToolActionAnimHighPriorEnabled = true
@@ -52,6 +52,7 @@ local UIGradientEnabled = true
 local UICornerEnabled = true
 local XSize = 460
 local YSize = 285
+local DragDelay = 0.1
 
 local LoadGithubSGAEnabled = true
 local LoadGithubCustomAnimsEnabled = true
@@ -507,6 +508,7 @@ if not IsInStudio then
 		TopMost = DecodedSettings.ConfTopMost
 		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
 		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
+		SpecCategoryOnLaunch = DecodedSettings.ConfSpecCategoryOnLaunch
 
 		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
 		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
@@ -567,7 +569,7 @@ local function SaveData(Type)
 		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
 		ConfTopMost = TopMost,
 		ConfLaunchBetaBuild = LaunchBetaBuild,
-		ConfDragDelay = DragDelay,
+		ConfSpecCategoryOnLaunch = SpecCategoryOnLaunch,
 
 		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
 		ConfToolActionAnimHighPriorEnabled = ToolActionAnimHighPriorEnabled,
@@ -589,6 +591,7 @@ local function SaveData(Type)
 		ConfUICornerEnabled = UICornerEnabled,
 		ConfXSize = XSize,
 		ConfYSize = YSize,
+		ConfDragDelay = DragDelay,
 
 		ConfLoadGithubSGAEnabled = LoadGithubSGAEnabled,
 		ConfLoadGithubCustomAnimsEnabled = LoadGithubCustomAnimsEnabled,
@@ -611,7 +614,7 @@ local function SaveData(Type)
 
 	if Type == "Default" then
 		writefile("EmoterData/EmoterConfig.json", encodedData)
-		Notify({Title = "Saved", Text = "Succesfully saved settings!", Time = 3})
+		Notify({Title = "Saved settings", Text = "Succesfully saved settings!", Time = 3})
 	elseif Type == "Specific" then
 		local targetNumber = tostring(game.GameId)
 		local folderPath = "EmoterData/SpecificSettings"
@@ -639,7 +642,7 @@ local function SaveData(Type)
 		end
 
 		writefile(ConfigFile, encodedData)
-		Notify({Title = "Saved", Text = "Succesfully saved settings for specific game!", Time = 3})
+		Notify({Title = "Saved settings", Text = "Succesfully saved settings for specific game!", Time = 3})
 	elseif Type == "Update" then
 		local DecodedData
 		if isfile("EmoterData/EmoterConfig.json") then
@@ -2596,6 +2599,9 @@ local function CreateGui()
 	DefaultSection.Font = Enum.Font.Roboto
 	DefaultSection.TextXAlignment = Enum.TextXAlignment.Left
 	AddHoverText(DefaultSection, "Default Animations")
+	local DSUIStroke = Instance.new("UIStroke", DefaultSection)
+	DSUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	DSUIStroke.Thickness = 2
 
 	SpecGameSection.Parent = MainFrame
 	SpecGameSection.Name = "SpecGameSection"
@@ -2612,6 +2618,9 @@ local function CreateGui()
 	SpecGameSection.Text = "<b>Game</b>"
 	SpecGameSection.Font = Enum.Font.Roboto
 	SpecGameSection.TextXAlignment = Enum.TextXAlignment.Left
+	local SGSUIStroke = Instance.new("UIStroke", SpecGameSection)
+	SGSUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	SGSUIStroke.Thickness = 2
 
 
 	--EmoteWheel
@@ -3089,6 +3098,7 @@ local function CreateGui()
 	AddSettings(LoadAllAnimationsOnRestart, "LoadAllAnimationsOnRestartOption", "Play ALL animations on reset", 0)
 	AddSettings(TopMost, "TopMostOption", "Top most", 0)
 	AddSettings(LaunchBetaBuild, "LaunchBetaBuildOption", "Open Beta Build on launch*", 0)
+	AddSettings(SpecCategoryOnLaunch, "SpecCategoryOnLaunchOption", "Show Specific category on launch", 0)
 
 	AddSettings(ToolIdleAnimHighPriorEnabled, "ToolIdlePriorityOption", "High priority on ToolIdle anims", 1)
 	AddSettings(ToolActionAnimHighPriorEnabled, "ToolActionPriorityOption", "High priority on ToolAction anims", 1)
@@ -3400,7 +3410,7 @@ local function CreateGui()
 		SideFrameTitle.Text = "Emoter GUI (R6)"
 	end
 
-	task.spawn(function()
+	task.spawn(function() --Making SideFrame half-transparent after 7 seconds
 		while GuiActive and not GuiRestarted do
 			SFHideTimeCount = SFHideTimeCount + 1
 			if SFHideTimeCount == 7 and SideFrame.Visible == true then
@@ -3585,6 +3595,7 @@ local function CreateGui()
 	end)
 
 	SpecGameSection.MouseButton1Click:Connect(function()
+		CurrentSection = "Specific"
 		SpecGameSection.UIStroke.Color = Color3.fromRGB(255, 255, 255)
 		DefaultSection.UIStroke.Color = Color3.fromRGB(0, 0, 0)
 		ScrollingFrameSpecific.Visible = true
@@ -3767,6 +3778,16 @@ local function CreateGui()
 			LaunchBetaBuildButton.CheckImage.Image = "rbxassetid://130396712201457"
 		else
 			LaunchBetaBuildButton.CheckImage.Image = ""
+		end
+	end)
+	local SpecCategoryOnLaunchButton = SettingsStuff.SpecCategoryOnLaunchOption
+	AddHoverText(SpecCategoryOnLaunchButton, "Every time you launch script, it will open Specific Game Animations category (if available)")
+	SpecCategoryOnLaunchButton.MouseButton1Click:Connect(function()
+		SpecCategoryOnLaunch = not SpecCategoryOnLaunch
+		if SpecCategoryOnLaunch == true then
+			SpecCategoryOnLaunchButton.CheckImage.Image = "rbxassetid://130396712201457"
+		else
+			SpecCategoryOnLaunchButton.CheckImage.Image = ""
 		end
 	end)
 
@@ -5004,6 +5025,14 @@ local function CreateGui()
 		AddHoverText(Tip, "Haven't found any animations for this specific game. \nWant to add it yourself? Check out <b>Emoter's Github</b> page!")
 	else
 		AddHoverText(SpecGameSection, "Specific game Animations")
+		if SpecCategoryOnLaunch and FirstLaunch then
+			CurrentSection = "Specific"
+			SpecGameSection.UIStroke.Color = Color3.fromRGB(255, 255, 255)
+			DefaultSection.UIStroke.Color = Color3.fromRGB(0, 0, 0)
+			ScrollingFrameSpecific.Visible = true
+			ScrollingFrame.Visible = false
+			ScrollingFrameR15.Visible = false
+		end
 	end
 
 
@@ -5098,7 +5127,7 @@ local function CreateGui()
 
 	-- UI Decorations
 	local UiCornerParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "ResetButton", "CustomAnimFrame", "PlayAnimButton", "CustomAnimButton", "HotkeysEditOption", "SaveSettingsButton", "LaunchIdDetectorButton", "GithubLinkButton", "HotkeysFrame", "SettingsFrame", "SettingsButton", "GuiTopFrame", "CloseGUI", "DestroyGUI", "GuiBottomFrame", "SpeedValue", "SideFrame", "OpenGUI", "ViewportFrame", "OptionsFrame", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton", "SearchFrame", "SearchButton"}
-	local UiStrokeParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimFrame", "HotkeysFrame", "SettingsFrame", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "ScrollingFrame", "ScrollingFrameR15", "ScrollingFrameSpecific", "OptionsFrame", "SearchFrame"}
+	local UiStrokeParts = {"Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimFrame", "HotkeysFrame", "SettingsFrame", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "ScrollingFrame", "ScrollingFrameR15", "ScrollingFrameSpecific", "OptionsFrame", "SearchFrame"}
 	local UiStroke1Parts = {"ResetButton", "PlayAnimButton", "IdBox", "HotkeysEditOption", "SaveSettingsButton", "LaunchIdDetectorButton", "GithubLinkButton", "SpeedValue", "SearchBox", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton"}
 	local UiGradientParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimBackButton", "BackButton", "CustomAnimFrame", "PlayAnimButton", "CustomAnimButton", "SettingsButton", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "SettingsButton", "DestroyGUI", "CloseGUI", "OptionsButton", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton", "SearchFrame", "SearchButton", "BackButton"}
 

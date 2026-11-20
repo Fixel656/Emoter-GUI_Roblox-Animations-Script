@@ -2,15 +2,15 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.57
+local ScriptVersion = 5.6
 local LastUsedVersion = ScriptVersion
 local IsBetaBuild = false
 local LatestVersion = nil
 local LatestBetaVersion = nil
 
+local ConnectedToInet = true
 local LaunchedTimes = 0
 local TotalTimeUsed = 0 --Unused for now, i'm not even sure i can make this feature working right
-local ConnectedToInet = true
 local GuiActive = true
 local GuiEmoter = nil
 local AnimationHandler = "Animate"
@@ -19,6 +19,7 @@ local IsInStudio = game:GetService("RunService"):IsStudio()
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local ContextActionService = game:GetService("ContextActionService")
+local LoadingState = "nil"
 
 --Settings
 local ToolAnimHighPriorEnabled = false
@@ -29,7 +30,7 @@ local LoadAnimationsOnRestart = true
 local LoadAllAnimationsOnRestart = false
 local TopMost = false
 local LaunchBetaBuild = false
-local DragDelay = 0.1
+local SpecCategoryOnLaunch = true
 
 local ToolIdleAnimHighPriorEnabled = false
 local ToolActionAnimHighPriorEnabled = true
@@ -51,6 +52,7 @@ local UIGradientEnabled = true
 local UICornerEnabled = true
 local XSize = 460
 local YSize = 285
+local DragDelay = 0.1
 
 local LoadGithubSGAEnabled = true
 local LoadGithubCustomAnimsEnabled = true
@@ -81,7 +83,369 @@ ResetCharHotkey.Value = "DoubleR"
 DoubleHotkey.Value = "LeftControl" --A secondary key for activating a DoubleHotkey
 EmoteWheelHotkey.Value = "Comma" --Not affected by "Hotkeys Enabled" setting
 
+local NotificationsSystem
+local function CreateNotificationsFrame()
+	if IsInStudio then
+		if game.Players.LocalPlayer.PlayerGui:FindFirstChild("EmoterNotificationSystem") then NotificationsSystem = game.Players.LocalPlayer.PlayerGui:FindFirstChild("EmoterNotificationSystem") return end
+	else
+		if game.CoreGui:FindFirstChild("EmoterNotificationSystem") then NotificationsSystem = game.CoreGui:FindFirstChild("EmoterNotificationSystem") return end
+	end
+
+	local NotificationsGui = Instance.new("ScreenGui")
+	NotificationsGui.Name = "EmoterNotificationSystem"
+	if IsInStudio then
+		NotificationsGui.Parent = game.Players.LocalPlayer.PlayerGui
+	else
+		NotificationsGui.Parent = game.CoreGui
+	end
+
+	local NotificationsFrame = Instance.new("Frame")
+	NotificationsFrame.Parent = NotificationsGui
+	NotificationsFrame.Name = "Notifications"
+	NotificationsFrame.AnchorPoint = Vector2.new(1, 1)
+	NotificationsFrame.Size = UDim2.new(0, 300, 0, 1000)
+	NotificationsFrame.BackgroundTransparency = 1
+	NotificationsFrame.Position = UDim2.new(1, -10, 1, -56)
+
+	local UIListLayout2 = Instance.new("UIListLayout")
+	UIListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	UIListLayout2.VerticalAlignment = Enum.VerticalAlignment.Bottom
+	UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout2.Padding = UDim.new(0, 8)
+	UIListLayout2.Parent = NotificationsFrame
+
+	local UIScale = Instance.new("UIScale")
+	UIScale.Scale = 0.95
+	UIScale.Parent = NotificationsFrame
+
+	NotificationsSystem = NotificationsGui
+end
+CreateNotificationsFrame()
+
+function Notify(data)
+	task.spawn(function()
+		local NotificationsFrame = NotificationsSystem.Notifications
+		local Closed = false
+
+		-- Notification Object Creation
+		local Notification = Instance.new("Frame")
+		Notification.Name = data.Title or 'Notification'
+		Notification.Size = UDim2.new(1, 0, 0, 800)
+		Notification.BackgroundTransparency = 1
+		Notification.Parent = NotificationsFrame
+		Notification.LayoutOrder = #NotificationsFrame:GetChildren() - 2
+		Notification.Visible = false
+
+		local Main = Instance.new("Frame")
+		Main.Name = "Main"
+		Main.Size = UDim2.new(1, 0, 1, -28)
+		Main.BackgroundTransparency = 0.45
+		Main.BorderSizePixel = 0
+		Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		Main.Parent = Notification
+
+		local UICorner = Instance.new("UICorner")
+		UICorner.CornerRadius = UDim.new(0, 5)
+		UICorner.Parent = Main
+		local UIStroke = Instance.new("UIStroke")
+		UIStroke.Color = Color3.fromRGB(240, 240, 240)
+		UIStroke.Transparency = 0.9
+		UIStroke.Parent = Main
+
+		local Icon = Instance.new("ImageLabel")
+		Icon.Name = "Icon"
+		Icon.AnchorPoint = Vector2.new(0, 0.5)
+		Icon.Size = UDim2.new(0, 40, 0, 40)
+		Icon.BackgroundTransparency = 1
+		Icon.Position = UDim2.new(0, 10, 0.5, 0)
+		Icon.Image = ""
+		Icon.Parent = Main
+
+		local Title = Instance.new("TextLabel")
+		Title.Name = "Title"
+		Title.ZIndex = 105
+		Title.Size = UDim2.new(1, -69, 0, 16)
+		Title.BackgroundTransparency = 1
+		Title.Position = UDim2.new(0, 60, 0, 12)
+		Title.TextTruncate = Enum.TextTruncate.SplitWord
+		Title.TextSize = 17
+		Title.RichText = true
+		Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Title.TextWrapped = true
+		Title.Font = Enum.Font.Roboto
+		Title.TextXAlignment = Enum.TextXAlignment.Left
+		Title.Parent = Main
+		local TitleUIPadding = Instance.new("UIPadding")
+		TitleUIPadding.Parent = Title
+
+		local Description = Instance.new("TextLabel")
+		Description.Name = "Description"
+		Description.ZIndex = 105
+		Description.Size = UDim2.new(1, -69, 1, -40)
+		Description.BackgroundTransparency = 1
+		Description.Position = UDim2.new(0, 60, 0, 34)
+		Description.TextSize = 15
+		Description.RichText = true
+		Description.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Description.TextYAlignment = Enum.TextYAlignment.Top
+		Description.TextWrapped = true
+		Description.Font = Enum.Font.Roboto
+		Description.TextTransparency = 0.15
+		Description.TextXAlignment = Enum.TextXAlignment.Left
+		Description.Parent = Main
+
+		local Close = Instance.new("TextButton")
+		Close.Name = "Close"
+		Close.ZIndex = 125
+		Close.AnchorPoint = Vector2.new(1, 0)
+		Close.Size = UDim2.new(0, 20, 0, 20)
+		Close.BackgroundTransparency = 1
+		Close.Position = UDim2.new(1, -3, 0, 3)
+		Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Close.Text = "X"
+		Close.Font = Enum.Font.FredokaOne
+		Close.TextTransparency = 0.3
+		Close.TextScaled = true
+		Close.Parent = Main
+
+		local Buttons = Instance.new("Frame")
+		Buttons.Name = "Buttons"
+		Buttons.AnchorPoint = Vector2.new(0, 1)
+		Buttons.Size = UDim2.new(1, 0, 0, 25)
+		Buttons.BackgroundTransparency = 1
+		Buttons.Position = UDim2.new(0, 0, 1, -1)
+		Buttons.Parent = Notification
+
+		local Choice1 = Instance.new("TextButton")
+		Choice1.Name = "Choice1"
+		Choice1.Size = UDim2.new(0.5, -1, 1, 0)
+		Choice1.BackgroundTransparency = 0.45
+		Choice1.BorderSizePixel = 0
+		Choice1.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		Choice1.TextSize = 14
+		Choice1.RichText = true
+		Choice1.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Choice1.Font = Enum.Font.Roboto
+		Choice1.Parent = Buttons
+
+		local UICorner1 = Instance.new("UICorner")
+		UICorner1.CornerRadius = UDim.new(0, 5)
+		UICorner1.TopRightRadius = UDim.new(0, 0)
+		UICorner1.BottomRightRadius = UDim.new(0, 0)
+		UICorner1.Parent = Choice1
+
+		local UIStroke1 = Instance.new("UIStroke")
+		UIStroke1.Color = Color3.fromRGB(255, 255, 255)
+		UIStroke1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		UIStroke1.Transparency = 0.9
+		UIStroke1.Parent = Choice1
+
+		local Choice2 = Instance.new("TextButton")
+		Choice2.Name = "Choice2"
+		Choice2.AnchorPoint = Vector2.new(1, 0)
+		Choice2.Size = UDim2.new(0.5, -1, 1, 0)
+		Choice2.BackgroundTransparency = 0.45
+		Choice2.Position = UDim2.new(1, 0, 0, 0)
+		Choice2.BorderSizePixel = 0
+		Choice2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		Choice2.TextSize = 14
+		Choice2.RichText = true
+		Choice2.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Choice2.Font = Enum.Font.Roboto
+		Choice2.Parent = Buttons
+
+		local UICorner2 = Instance.new("UICorner")
+		UICorner2.CornerRadius = UDim.new(0, 5)
+		UICorner2.TopLeftRadius = UDim.new(0, 0)
+		UICorner2.BottomLeftRadius = UDim.new(0, 0)
+		UICorner2.Parent = Choice2
+		local UIStroke2 = Instance.new("UIStroke")
+		UIStroke2.Color = Color3.fromRGB(255, 255, 255)
+		UIStroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		UIStroke2.Transparency = 0.9
+		UIStroke2.Parent = Choice2
+		local UIListLayout = Instance.new("UIListLayout")
+		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+		UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayout.HorizontalFlex = Enum.UIFlexAlignment.Fill
+		UIListLayout.Padding = UDim.new(0, 2)
+		UIListLayout.Parent = Buttons
+		local UIListLayout1 = Instance.new("UIListLayout")
+		UIListLayout1.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		UIListLayout1.VerticalAlignment = Enum.VerticalAlignment.Bottom
+		UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayout1.Padding = UDim.new(0, 2)
+		UIListLayout1.Parent = Notification
+
+		-- Set Data
+		local Main = Notification.Main
+		Title.Text = "<b>"..data.Title.."</b>" or "<b>Title</b>"
+		Description.Text = data.Text or "Сontent"
+		Close.Visible = false
+
+		-- Set Ui values
+		Main.BackgroundTransparency = 1
+		Title.TextTransparency = 1
+		Description.TextTransparency = 1
+		Main.UIStroke.Transparency = 1
+		Icon.ImageTransparency = 1
+		Icon.BackgroundTransparency = 1
+		Buttons.Choice1.BackgroundTransparency = 1
+		Buttons.Choice1.TextTransparency = 1
+		Buttons.Choice2.BackgroundTransparency = 1
+		Buttons.Choice2.TextTransparency = 1
+		Buttons.Choice1.UIStroke.Transparency = 1
+		Buttons.Choice2.UIStroke.Transparency = 1
+		task.wait()
+
+		local OrderChange
+		OrderChange = NotificationsFrame.ChildRemoved:Connect(function()
+			Notification.LayoutOrder = Notification.LayoutOrder - 1
+		end)
+
+		local function CloseWindow()
+			Closed = true
+			Notification.Interactable = false
+			game:GetService("TweenService"):Create(Close, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Main.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+			game:GetService("TweenService"):Create(Description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+			task.wait(0.05)
+			game:GetService("TweenService"):Create(Icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
+			task.wait(0.05)
+			game:GetService("TweenService"):Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+
+			game:GetService("TweenService"):Create(Buttons.Choice1, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Buttons.Choice2, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Buttons.Choice1, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Buttons.Choice2, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+			game:GetService("TweenService"):Create(Buttons.Choice1.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+			game:GetService("TweenService"):Create(Buttons.Choice2.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+			task.wait(0.15)
+			game:GetService("TweenService"):Create(Buttons, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, 0)}):Play()
+			game:GetService("TweenService"):Create(Notification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, -NotificationsFrame:FindFirstChild("UIListLayout").Padding.Offset)}):Play()
+			task.wait(0.6)
+
+			Notification.Visible = false
+			OrderChange:Disconnect()
+			Notification:Destroy()
+		end
+
+		if data.Image then
+			Icon.Image = "rbxassetid://" .. data.Image
+		else
+			Icon.Visible = false
+			Title.Size = UDim2.new(1, -22,0, 16)
+			Title.Position = UDim2.new(0, 12,0, 12)
+			Title.TextXAlignment = Enum.TextXAlignment.Center
+			Description.Size = UDim2.new(1, -22,1, -40)
+			Description.Position = UDim2.new(0, 12,0, 34)
+			Description.TextXAlignment = Enum.TextXAlignment.Center
+		end
+		if data.Sound then
+			local Sound = Instance.new("Sound", Notification)
+			Sound.SoundId = "rbxassetid://" .. data.Sound
+			Sound.Volume = 0.5
+			Sound:Play()
+		end
+		if data.Choice1Text or data.Choice2Text then
+			if data.Choice1Text then
+				Buttons.Choice1.Text = data.Choice1Text
+				Buttons.Choice1.MouseButton1Click:Connect(function()
+					CloseWindow()
+					data.Choice1Function()
+				end)
+			end
+			if data.Choice2Text then
+				Buttons.Choice2.Text = data.Choice2Text
+				Buttons.Choice2.MouseButton1Click:Connect(function()
+					CloseWindow()
+					data.Choice2Function()
+				end)
+			else
+				Buttons.Choice2.Visible = false
+				Buttons.Choice1.UICorner.BottomRightRadius = UDim.new(0,5)
+				Buttons.Choice1.UICorner.TopRightRadius = UDim.new(0,5)
+			end
+		else
+			Buttons.Visible = false
+			Buttons.Size = UDim2.new(1, 0, 0, -2)
+			Main.Size = UDim2.new(1, 0, 1, 0)
+		end
+
+		Notification.Visible = true
+
+		Main.MouseEnter:Connect(function()
+			Title.Size = Title.Size - UDim2.new(0, 11, 0, 0)
+			if not data.Image then
+				Title.UIPadding.PaddingLeft = UDim.new(0, 11)
+			end
+			Close.Visible = true
+		end)
+		Main.MouseLeave:Connect(function()
+			Title.Size = Title.Size + UDim2.new(0, 11, 0, 0)
+			if not data.Image then
+				Title.UIPadding.PaddingLeft = UDim.new(0, 0)
+			end
+			Close.Visible = false
+		end)
+		Close.MouseButton1Click:Connect(function()
+			CloseWindow()
+		end)
+
+		-- Calculate textbounds and set initial values
+		local bounds = {Title.TextBounds.Y, Description.TextBounds.Y, Buttons.Size.Y.Offset + 2}
+		Notification.Size = UDim2.new(1, 0, 0, -NotificationsFrame:FindFirstChild("UIListLayout").Padding.Offset)
+		Buttons.Size = UDim2.new(1, 0, 0, 0)
+		--Popup
+		game:GetService("TweenService"):Create(Notification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, math.max(bounds[1] + bounds[2] + bounds[3] + 31, 60))}):Play()
+		game:GetService("TweenService"):Create(Buttons, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, 25)}):Play()
+		task.wait(0.05)
+		game:GetService("TweenService"):Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.35}):Play()
+		game:GetService("TweenService"):Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+		task.wait(0.05)
+		game:GetService("TweenService"):Create(Icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
+		task.wait(0.05)
+		game:GetService("TweenService"):Create(Description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+		game:GetService("TweenService"):Create(Main.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.9}):Play()
+		game:GetService("TweenService"):Create(Close, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0.3}):Play()
+
+		game:GetService("TweenService"):Create(Buttons.Choice1, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.35}):Play()
+		game:GetService("TweenService"):Create(Buttons.Choice2, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.35}):Play()
+		game:GetService("TweenService"):Create(Buttons.Choice1, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+		game:GetService("TweenService"):Create(Buttons.Choice2, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+		game:GetService("TweenService"):Create(Buttons.Choice1.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.9}):Play()
+		game:GetService("TweenService"):Create(Buttons.Choice2.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.9}):Play()
+
+		if data.Title == "Loading data..." then --Case for loading notification
+			while wait() do
+				if LoadingState == "Loaded" or LoadingState == "LaunchingBeta" then
+					CloseWindow()
+					return
+				end
+			end
+		end
+
+		if data.Time ~= false then
+			local AutoWaitTime = math.min(math.max((#Description.Text * 0.05) + 2.5, 3), 10)
+			task.wait(data.Time or AutoWaitTime)
+		else
+			while not Closed do
+				if Closed then return end
+				wait(1)
+			end
+		end
+
+		if Closed then return end
+		CloseWindow()
+	end)
+end
+
+Notify({Title = "Loading data...", Text = "Please wait for Emoter to load...", Time = 3})
+
 print("Getting Emoter Metadata...")
+LoadingState = "Preloading"
 if AnalyticsEnabled and not IsInStudio then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Documentations%20%26%20Changelogs/CountHandler.lua",true))() end) end
 -- P.S. This CountHandler made to see how many people are using this script and does NOT collect any other data. BUT if you let AnalyticsEnabled setting enabled you will get rid of one bug where specific settings couldn't load on first script execution
 local MetadataSuccess, MetadataContent = pcall(function()
@@ -142,8 +506,9 @@ if not IsInStudio then
 		LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
 		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
 		TopMost = DecodedSettings.ConfTopMost
-		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
 		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
+		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
+		SpecCategoryOnLaunch = DecodedSettings.ConfSpecCategoryOnLaunch
 
 		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
 		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
@@ -186,6 +551,7 @@ if not IsInStudio then
 end
 if ConnectedToInet and LaunchBetaBuild and not IsBetaBuild and LatestBetaVersion > LatestVersion then
 	warn("LaunchBetaBuild setting enabled and Beta version is higher than stable version, Launching Beta build...")
+	LoadingState = "LaunchingBeta"
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
 	return
 end	
@@ -203,7 +569,7 @@ local function SaveData(Type)
 		ConfLoadAllAnimationsOnRestart = LoadAllAnimationsOnRestart,
 		ConfTopMost = TopMost,
 		ConfLaunchBetaBuild = LaunchBetaBuild,
-		ConfDragDelay = DragDelay,
+		ConfSpecCategoryOnLaunch = SpecCategoryOnLaunch,
 
 		ConfToolIdleAnimHighPriorEnabled = ToolIdleAnimHighPriorEnabled,
 		ConfToolActionAnimHighPriorEnabled = ToolActionAnimHighPriorEnabled,
@@ -225,6 +591,7 @@ local function SaveData(Type)
 		ConfUICornerEnabled = UICornerEnabled,
 		ConfXSize = XSize,
 		ConfYSize = YSize,
+		ConfDragDelay = DragDelay,
 
 		ConfLoadGithubSGAEnabled = LoadGithubSGAEnabled,
 		ConfLoadGithubCustomAnimsEnabled = LoadGithubCustomAnimsEnabled,
@@ -247,7 +614,7 @@ local function SaveData(Type)
 
 	if Type == "Default" then
 		writefile("EmoterData/EmoterConfig.json", encodedData)
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Saved", Text = "Succesfully saved settings!", Duration = 3})
+		Notify({Title = "Saved settings", Text = "Succesfully saved settings!", Time = 3})
 	elseif Type == "Specific" then
 		local targetNumber = tostring(game.GameId)
 		local folderPath = "EmoterData/SpecificSettings"
@@ -275,17 +642,26 @@ local function SaveData(Type)
 		end
 
 		writefile(ConfigFile, encodedData)
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Saved", Text = "Succesfully saved settings for specific game!", Duration = 3})
+		Notify({Title = "Saved settings", Text = "Succesfully saved settings for specific game!", Time = 3})
 	elseif Type == "Update" then
-		local rawData = readfile("EmoterData/EmoterConfig.json")
-		local DecodedData = HttpService:JSONDecode(rawData)
+		local DecodedData
+		if isfile("EmoterData/EmoterConfig.json") then
+			local rawData = readfile("EmoterData/EmoterConfig.json")
+			DecodedData = HttpService:JSONDecode(rawData)
+		else
+			DecodedData = {}
+		end
 
 		DecodedData.ConfLaunchedTimes = LaunchedTimes + 1
 		DecodedData.ConfLastUsedVersion = ScriptVersion
 		DecodedData.ConfTotalTimeUsed = TotalTimeUsed
 
-		local UpdatedData = HttpService:JSONEncode(DecodedData)
-		writefile("EmoterData/EmoterConfig.json", UpdatedData)
+		if isfile("EmoterData/EmoterConfig.json") then
+			local UpdatedData = HttpService:JSONEncode(DecodedData)
+			writefile("EmoterData/EmoterConfig.json", UpdatedData)
+		else
+			writefile("EmoterData/EmoterConfig.json", encodedData)
+		end
 	end
 end
 
@@ -317,28 +693,7 @@ local CustomAnimOpened = false
 local PrevCustomAnimId = ""
 
 local RestartAnimations = {}
-
 local EmoteWheelEmotes = {Emote1 = nil, Emote2 = nil, Emote3 = nil, Emote4 = nil, Emote5 = nil, Emote6 = nil, Emote7 = nil, Emote8 = nil}
-
-if (Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15) then
-	EmoteWheelEmotes.Emote1 = "R15Wave"
-	EmoteWheelEmotes.Emote2 = "R15FortniteDance"
-	EmoteWheelEmotes.Emote3 = "R15GangnamStyle"
-	EmoteWheelEmotes.Emote4 = "R15RussianKick"
-	EmoteWheelEmotes.Emote5 = "R15Rambunctious"
-	EmoteWheelEmotes.Emote6 = "R15Helicopter"
-	EmoteWheelEmotes.Emote7 = "R15MiniWalk"
-	EmoteWheelEmotes.Emote8 = "R15TakeTheL"
-else
-	EmoteWheelEmotes.Emote1 = "R6Dance1"
-	EmoteWheelEmotes.Emote2 = "R6Dance2"
-	EmoteWheelEmotes.Emote3 = "R6Dance3"
-	EmoteWheelEmotes.Emote4 = "R6MovingDance"
-	EmoteWheelEmotes.Emote5 = "R6Bang"
-	EmoteWheelEmotes.Emote6 = "R6SpinDance"
-	EmoteWheelEmotes.Emote7 = "R6FloatSit"
-	EmoteWheelEmotes.Emote8 = "R6Spinner"
-end
 
 
 --GUI stuff and tables (Moved most of locales are here cuz of that stupid 200 locales limit in a single function and i have no idea how to fix it in another way)
@@ -412,7 +767,7 @@ local LaunchIdDetectorButton
 local ResetButton
 local GithubLinkButton
 
-print("--- Script by Fixel656, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
+warn("--- Script by Fixel, based on Energize GUI by illremember. Do not copy and do not claim as your own! ---")
 print("Script version: "..ScriptVersion)
 print("Game Id: "..game.GameId)
 local function CreateGui()
@@ -558,9 +913,29 @@ local function CreateGui()
 		BgColor = Color3.fromRGB(65, 65, 65)
 		ScrollBgColor = Color3.fromRGB(20, 20, 20)
 		UiButColor = Color3.new(1, 1, 1)
-		TextBgColor = Color3.fromRGB(30, 30, 30)
+		TextBgColor = Color3.fromRGB(13, 13, 13)
 		ButtonCol = Color3.fromRGB(65, 65, 65)
 		ButtonSelectCol = Color3.fromRGB(129, 129, 129)
+	end
+
+	if (Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15) then
+		EmoteWheelEmotes.Emote1 = "R15Wave"
+		EmoteWheelEmotes.Emote2 = "R15FortniteDance"
+		EmoteWheelEmotes.Emote3 = "R15GangnamStyle"
+		EmoteWheelEmotes.Emote4 = "R15RussianKick"
+		EmoteWheelEmotes.Emote5 = "R15Rambunctious"
+		EmoteWheelEmotes.Emote6 = "R15Helicopter"
+		EmoteWheelEmotes.Emote7 = "R15MiniWalk"
+		EmoteWheelEmotes.Emote8 = "R15TakeTheL"
+	else
+		EmoteWheelEmotes.Emote1 = "R6Dance1"
+		EmoteWheelEmotes.Emote2 = "R6Dance2"
+		EmoteWheelEmotes.Emote3 = "R6Dance3"
+		EmoteWheelEmotes.Emote4 = "R6MovingDance"
+		EmoteWheelEmotes.Emote5 = "R6Bang"
+		EmoteWheelEmotes.Emote6 = "R6SpinDance"
+		EmoteWheelEmotes.Emote7 = "R6FloatSit"
+		EmoteWheelEmotes.Emote8 = "R6Spinner"
 	end
 
 	local function AddVPF()
@@ -631,10 +1006,12 @@ local function CreateGui()
 			TextLabel.Parent = Emoter
 			TextLabel.Visible = false
 			TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			TextLabel.BackgroundTransparency = 1
 			TextLabel.AutomaticSize = Enum.AutomaticSize.XY
 			TextLabel.Size = UDim2.new(0, 5, 0, 17)
 			TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+			TextLabel.TextTransparency = 1
 			TextLabel.TextSize = 17
 			TextLabel.TextWrapped = true
 			TextLabel.Font = Enum.Font.SourceSans
@@ -667,12 +1044,17 @@ local function CreateGui()
 			local mouse = Player:GetMouse()
 			TextLabel.Position = UDim2.new(0, mouse.X, 0, mouse.Y + 85)
 			TextLabel.Visible = true
+			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 0}):Play()
+			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 0}):Play()
 			mouse.Move:connect(function()
 				TextLabel.Position = UDim2.new(0, mouse.X, 0, mouse.Y + 85)
 			end)
 			-- Add hover text
 		end)
 		Object.MouseLeave:connect(function()
+			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 1}):Play()
+			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 1}):Play()
+			wait(.06)
 			TextLabel:Destroy()
 			-- Destroy hover text
 		end)
@@ -712,62 +1094,6 @@ local function CreateGui()
 			end
 		end
 		UpdateAnimInfo()
-	end
-
-	local function CreateAnimButton(Object, Name, Text, Type, LayoutPos)
-		local Button = Object
-		Button.Name = Name
-
-		if Type == "R6" then
-			if ScrollingFrame:FindFirstChild(Name) then 
-				ScrollingFrame:FindFirstChild(Name):Destroy() 
-				--print("Found copy of anim: "..Name)
-			end
-			Button.Parent = ScrollingFrame
-		elseif Type == "R15" then
-			if ScrollingFrameR15:FindFirstChild(Name) then 
-				ScrollingFrameR15:FindFirstChild(Name):Destroy() 
-				--print("Found copy of anim: "..Name)
-			end
-			Button.Parent = ScrollingFrameR15
-		elseif Type == "Spec" then
-			if ScrollingFrameSpecific:FindFirstChild(Name) then 
-				ScrollingFrameSpecific:FindFirstChild(Name):Destroy() 
-				--print("Found copy of anim: "..Name)
-			end
-			Button.Parent = ScrollingFrameSpecific
-		end
-
-		Button.BackgroundColor3 = ButtonCol
-		Button.FontFace.Weight = Enum.FontWeight.Bold
-		Button.Size = UDim2.new(0, 104, 0, 30)
-		Button.TextColor3 = UiButColor
-		Button.RichText = true
-		Button.Font = Enum.Font.Roboto
-		Button.Text = "<b>" .. Text .. "</b>"
-		Button.TextScaled = true
-		Button.LayoutOrder = LayoutPos
-
-		local UIStroke = Instance.new("UIStroke")
-		UIStroke.Parent = Button
-		UIStroke.Thickness = 1
-		UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		if UICornerEnabled then
-			local UICorner = Instance.new("UICorner")
-			UICorner.Parent = Button
-			UICorner.CornerRadius = UDim.new(0, 3)
-		end
-		if UIGradientEnabled then
-			local UIGradient = Instance.new("UIGradient")
-			UIGradient.Parent = Button
-			UIGradient.Color = ColorSequence.new(Color3.fromRGB(207, 207, 207), Color3.fromRGB(255, 255, 255))
-			UIGradient.Rotation = -90
-		end
-
-		local ButtonPadding = Instance.new("UIPadding")
-		ButtonPadding.Parent = Button
-		ButtonPadding.PaddingLeft = UDim.new(0, 2)
-		ButtonPadding.PaddingRight = UDim.new(0, 2)
 	end
 
 	local function PlayAnim(Button, ID, FadeTime, Speed, Type, LoopedVal, NeedPause) -- Types Tutorial on Emotes section
@@ -945,6 +1271,7 @@ local function CreateGui()
 				local NumberStr = string.match(Type, "Pause([%d%.]+)")
 				local Number = tonumber(NumberStr) or 1
 				local PauseTask = task.spawn(function()
+					track.Looped = true
 					while wait() do
 						if track.TimePosition >= Number then
 							track:AdjustSpeed(0)
@@ -964,12 +1291,6 @@ local function CreateGui()
 			end
 		end
 		local function StopAnim(Reason)
-			if Type:find("PriorLow") then
-				track.Priority = Enum.AnimationPriority.Action3
-			elseif Type:find("PriorHigh") then
-				track.Priority = Enum.AnimationPriority.Action4
-			end	
-
 			if not Type:find("Running") then
 				IsRunning = false
 			end
@@ -985,7 +1306,13 @@ local function CreateGui()
 			end
 			IsPlaying = false
 
-			if (Reason == "Destroy") then return end
+			if (Reason == "Destroy") then track = nil return end
+
+			if Type:find("PriorLow") then
+				track.Priority = Enum.AnimationPriority.Action3
+			elseif Type:find("PriorHigh") then
+				track.Priority = Enum.AnimationPriority.Action4
+			end	
 
 			Button.BackgroundColor3 = ButtonCol
 			Button.UIStroke.Thickness = 1
@@ -1020,12 +1347,14 @@ local function CreateGui()
 		PauseAnimsButton.MouseButton1Click:Connect(function()
 			PauseAnimsOption = not PauseAnimsOption
 			if PauseAnimsOption then
-				track:AdjustSpeed(0)
-				PauseAnimsButton.BackgroundColor3 = ButtonSelectCol
-				if DebugInfoEnabled and AnimACTIVE then print("Paused at:"..track.TimePosition) end
+				if AnimACTIVE then
+					track:AdjustSpeed(0)
+					if DebugInfoEnabled and AnimACTIVE then print("Paused at:"..track.TimePosition) end
+				end
 			else
-				track:AdjustSpeed((Speed + SpeedNum) * NegativeNumber)
-				PauseAnimsButton.BackgroundColor3 = ButtonCol
+				if AnimACTIVE then
+					track:AdjustSpeed((Speed + SpeedNum) * NegativeNumber)
+				end
 			end
 		end)
 
@@ -1064,17 +1393,17 @@ local function CreateGui()
 						table.insert(RestartAnimations, Frame..Name)
 					end
 				end
-
 			end
 
 			if SwitchModeFactor == true then 
 				SwitchModeFactor = false	
 				return 
 			end
-			if GuiActive == false or GuiRestarted == true then track:Destroy() end
 
 			AnimACTIVE = false
-			PauseAnimsOption = false
+			if Reason == "Forced" then
+				PauseAnimsOption = false
+			end
 			if (Reason == "Reset/Destroy") then
 				StopAnim("Destroy")
 			else
@@ -1332,12 +1661,6 @@ local function CreateGui()
 
 			if prefix == Frame and suffix == Button.Name then
 				task.spawn(function()
-					while true do
-						if GuiLoaded then
-							break
-						end
-						wait()
-					end
 					Button:WaitForChild("UIStroke")
 					if Button ~= nil and AnimLoaded then
 						AnimACTIVE = true
@@ -1346,6 +1669,76 @@ local function CreateGui()
 				end)
 			end
 		end
+	end
+
+	local function CreateAnim(Object, Name, Text, Frame, LayoutPos, ID, FadeTime, Speed, Type, LoopedVal, NeedPause)
+		local Button = Object
+		Button.Name = Name
+		local Destroyed = false
+
+		if Frame == "R6" then
+			if ScrollingFrame:FindFirstChild(Name) then 
+				ScrollingFrame:FindFirstChild(Name):Destroy()
+				--print("Found copy of anim: "..Name)
+			end
+			Button.Parent = ScrollingFrame
+		elseif Frame == "R15" then
+			if ScrollingFrameR15:FindFirstChild(Name) then 
+				ScrollingFrameR15:FindFirstChild(Name):Destroy()
+				--print("Found copy of anim: "..Name)
+			end
+			Button.Parent = ScrollingFrameR15
+		elseif Frame == "Spec" then
+			if ScrollingFrameSpecific:FindFirstChild(Name) then 
+				ScrollingFrameSpecific:FindFirstChild(Name):Destroy()
+				--print("Found copy of anim: "..Name)
+			end
+			Button.Parent = ScrollingFrameSpecific
+		end
+
+		Button.BackgroundColor3 = ButtonCol
+		Button.FontFace.Weight = Enum.FontWeight.Bold
+		Button.Size = UDim2.new(0, 104, 0, 30)
+		Button.TextColor3 = UiButColor
+		Button.RichText = true
+		Button.Font = Enum.Font.Roboto
+		Button.Text = "<b>" .. Text .. "</b>"
+		Button.TextScaled = true
+		Button.LayoutOrder = LayoutPos
+
+		local UIStroke = Instance.new("UIStroke")
+		UIStroke.Parent = Button
+		UIStroke.Thickness = 1
+		UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		if UICornerEnabled then
+			local UICorner = Instance.new("UICorner")
+			UICorner.Parent = Button
+			UICorner.CornerRadius = UDim.new(0, 3)
+		end
+		if UIGradientEnabled then
+			local UIGradient = Instance.new("UIGradient")
+			UIGradient.Parent = Button
+			UIGradient.Color = ColorSequence.new(Color3.fromRGB(207, 207, 207), Color3.fromRGB(255, 255, 255))
+			UIGradient.Rotation = -90
+		end
+
+		local ButtonPadding = Instance.new("UIPadding")
+		ButtonPadding.Parent = Button
+		ButtonPadding.PaddingLeft = UDim.new(0, 2)
+		ButtonPadding.PaddingRight = UDim.new(0, 2)
+
+		Button.Destroying:Connect(function()
+			Destroyed = true
+		end)
+
+		task.spawn(function()
+			while not GuiLoaded do
+				wait()
+			end
+			if Destroyed == false then
+				PlayAnim(Object, ID, FadeTime, Speed, Type, LoopedVal, NeedPause)
+			end
+		end)
 	end
 
 	local function AddSettings(Setting, Title, Text, LayoutOrder)
@@ -1656,6 +2049,8 @@ local function CreateGui()
 	end
 
 	-- Creating Objects
+	LoadingState = "Building Gui"
+
 	Emoter.Name = "Emoter"
 	Emoter.ResetOnSpawn = false
 	Emoter.IgnoreGuiInset = true
@@ -1965,7 +2360,7 @@ local function CreateGui()
 	PauseAnimsButton.Image = "rbxassetid://103681828169035"
 	PauseAnimsButton.Parent = OptionsFrame
 	PauseAnimsButton.ZIndex = 0
-	AddHoverText(PauseAnimsButton, "Pause ALL Anims")
+	AddHoverText(PauseAnimsButton, "Pause animations (May contain bugs!)")
 
 	StopDefAnimsButton.Name = "StopDefAnimsButton"
 	StopDefAnimsButton.Size = UDim2.new(0, 100, 0, 100)
@@ -2204,6 +2599,9 @@ local function CreateGui()
 	DefaultSection.Font = Enum.Font.Roboto
 	DefaultSection.TextXAlignment = Enum.TextXAlignment.Left
 	AddHoverText(DefaultSection, "Default Animations")
+	local DSUIStroke = Instance.new("UIStroke", DefaultSection)
+	DSUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	DSUIStroke.Thickness = 2
 
 	SpecGameSection.Parent = MainFrame
 	SpecGameSection.Name = "SpecGameSection"
@@ -2220,6 +2618,9 @@ local function CreateGui()
 	SpecGameSection.Text = "<b>Game</b>"
 	SpecGameSection.Font = Enum.Font.Roboto
 	SpecGameSection.TextXAlignment = Enum.TextXAlignment.Left
+	local SGSUIStroke = Instance.new("UIStroke", SpecGameSection)
+	SGSUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	SGSUIStroke.Thickness = 2
 
 
 	--EmoteWheel
@@ -2428,6 +2829,9 @@ local function CreateGui()
 	GuiName.Font = Enum.Font.Highway
 	GuiName.TextColor3 = UiButColor
 	GuiName.Parent = SettingsFrame
+	if IsBetaBuild then
+		GuiName.Text = "Emoter BETA"
+	end
 
 	AutorText.Name = "AutorText"
 	AutorText.AnchorPoint = Vector2.new(0.5, 0)
@@ -2692,8 +3096,9 @@ local function CreateGui()
 	AddSettings(AnalyticsEnabled, "AnalyticsOption", "Enable analytics (hover for info)", 0)
 	AddSettings(LoadAnimationsOnRestart, "LoadAnimationsOnRestartOption", "Play 'Running' & 'Idle' anims on reset", 0)
 	AddSettings(LoadAllAnimationsOnRestart, "LoadAllAnimationsOnRestartOption", "Play ALL animations on reset", 0)
-	AddSettings(LaunchBetaBuild, "LaunchBetaBuildOption", "Join BETA test*", 0)
 	AddSettings(TopMost, "TopMostOption", "Top most", 0)
+	AddSettings(LaunchBetaBuild, "LaunchBetaBuildOption", "Open Beta Build on launch*", 0)
+	AddSettings(SpecCategoryOnLaunch, "SpecCategoryOnLaunchOption", "Show Specific category on launch", 0)
 
 	AddSettings(ToolIdleAnimHighPriorEnabled, "ToolIdlePriorityOption", "High priority on ToolIdle anims", 1)
 	AddSettings(ToolActionAnimHighPriorEnabled, "ToolActionPriorityOption", "High priority on ToolAction anims", 1)
@@ -2869,7 +3274,10 @@ local function CreateGui()
 	AddHoverText(GithubLinkButton, "Get the Github for Tutorials and more Info! (Copy Link)")
 
 
+	--Functions
 	--Hotkey Functions
+	LoadingState = "Loading Hotkeys"
+
 	local function CloseGuiFunction()
 		if MainFrame.Visible == true then
 			SideFrame.Position = MainFrame.Position
@@ -2965,6 +3373,7 @@ local function CreateGui()
 	AddHoverText(HotkeysStuff:FindFirstChild("EmoteWheelHotkey").TextLabel, "WARNING! This Hotkey is NOT affected by EnableHotkeys setting. To disable it you can press Backspace to unbind")
 
 	-- Buttons and other functions
+	LoadingState = "Loading Functions"
 	local function DestroyGuiFunction()
 		GuiActive = false
 		BindHotkeys()
@@ -3001,7 +3410,7 @@ local function CreateGui()
 		SideFrameTitle.Text = "Emoter GUI (R6)"
 	end
 
-	task.spawn(function()
+	task.spawn(function() --Making SideFrame half-transparent after 7 seconds
 		while GuiActive and not GuiRestarted do
 			SFHideTimeCount = SFHideTimeCount + 1
 			if SFHideTimeCount == 7 and SideFrame.Visible == true then
@@ -3132,7 +3541,7 @@ local function CreateGui()
 
 	AddTempAnimButton.MouseButton1Click:Connect(function()
 		if IdBox.Text == "" or string.match(IdBox.Text, "%a") then
-			game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Error", Text = "Anim Id is empty or has letters", Duration = 3})
+			Notify({Title = "Error", Text = "Anim Id is empty or has letters", Time = 3})
 			return end
 
 		local SameResult = false
@@ -3141,7 +3550,7 @@ local function CreateGui()
 			for i, Result in ipairs(Frame:GetDescendants()) do
 				if Result:IsA("TextButton") and Result.Name == IdBox.Text then
 					SameResult = true
-					game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Error", Text = "There's already Anim with this Id", Duration = 3})
+					Notify({Title = "Error", Text = "There's already Anim with this Id", Time = 3})
 					break
 				end
 			end
@@ -3150,11 +3559,10 @@ local function CreateGui()
 		if SameResult == false then
 			local Anim = Instance.new("TextButton")
 			if RigType == "R6" then
-				CreateAnimButton(Anim, IdBox.Text, IdBox.Text, "R6", 0)
+				CreateAnim(Anim, IdBox.Text, IdBox.Text, "R6", 0, IdBox.Text, .1, 1, "PriorLow", false)
 			else
-				CreateAnimButton(Anim, IdBox.Text, IdBox.Text, "R15", 0)
+				CreateAnim(Anim, IdBox.Text, IdBox.Text, "R15", 0, IdBox.Text, .1, 1, "PriorLow", false)
 			end
-			PlayAnim(Anim, IdBox.Text, .1, 1, "PriorLow", false)
 			local UiStroke = Instance.new("UIStroke")
 			UiStroke.Parent = Anim
 			UiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -3187,6 +3595,7 @@ local function CreateGui()
 	end)
 
 	SpecGameSection.MouseButton1Click:Connect(function()
+		CurrentSection = "Specific"
 		SpecGameSection.UIStroke.Color = Color3.fromRGB(255, 255, 255)
 		DefaultSection.UIStroke.Color = Color3.fromRGB(0, 0, 0)
 		ScrollingFrameSpecific.Visible = true
@@ -3199,25 +3608,21 @@ local function CreateGui()
 	PauseAnimsButton.MouseButton1Click:Connect(function()
 		PauseAnimsOption = not PauseAnimsOption
 		if PauseAnimsOption then
-			if Player.Character:FindFirstChild(AnimationHandler) then
-				Player.Character:FindFirstChild(AnimationHandler).Disabled = true
-			end
 			local playingTracks = Player.Character.Humanoid:GetPlayingAnimationTracks()
 			for _, animtrack in ipairs(playingTracks) do
 				if animtrack.Name ~= "AAnimation" then
 					animtrack:AdjustSpeed(0)
 				end
 			end
+			PauseAnimsButton.BackgroundColor3 = ButtonSelectCol
 		else
-			if Player.Character:FindFirstChild(AnimationHandler) then
-				Player.Character:FindFirstChild(AnimationHandler).Disabled = false
-			end
 			local playingTracks = Player.Character.Humanoid:GetPlayingAnimationTracks()
 			for _, animtrack in ipairs(playingTracks) do
 				if animtrack.Name ~= "AAnimation" then
 					animtrack:AdjustSpeed(1) -- always playing at speed 1
 				end
 			end
+			PauseAnimsButton.BackgroundColor3 = ButtonCol
 		end
 	end)
 
@@ -3291,9 +3696,10 @@ local function CreateGui()
 
 
 	--Settings buttons
+	LoadingState = "Loading Settings"
 	SGSNotification.MouseButton2Click:Connect(function()
 		delfile(ConfigFile)
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Deleted", Text = "Deleted specific game settings file", Duration = 3})
+		Notify({Title = "Deleted", Text = "Deleted specific game settings file", Time = 3})
 	end)
 
 	DelayNumBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -3365,18 +3771,23 @@ local function CreateGui()
 		end
 	end)
 	local LaunchBetaBuildButton = SettingsStuff.LaunchBetaBuildOption
-	if LatestBetaVersion > LatestVersion then
-		AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\nP.S.: Beta version won't launch if stable one is higher")
-	else
-		AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\n<b>Currently Beta version is lower than stable one, no need to launch")
-	end
-	
+	AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\nP.S.: Beta version won't launch if stable one is higher")
 	LaunchBetaBuildButton.MouseButton1Click:Connect(function()
 		LaunchBetaBuild = not LaunchBetaBuild
 		if LaunchBetaBuild == true then
 			LaunchBetaBuildButton.CheckImage.Image = "rbxassetid://130396712201457"
 		else
 			LaunchBetaBuildButton.CheckImage.Image = ""
+		end
+	end)
+	local SpecCategoryOnLaunchButton = SettingsStuff.SpecCategoryOnLaunchOption
+	AddHoverText(SpecCategoryOnLaunchButton, "Every time you launch script, it will open Specific Game Animations category (if available)")
+	SpecCategoryOnLaunchButton.MouseButton1Click:Connect(function()
+		SpecCategoryOnLaunch = not SpecCategoryOnLaunch
+		if SpecCategoryOnLaunch == true then
+			SpecCategoryOnLaunchButton.CheckImage.Image = "rbxassetid://130396712201457"
+		else
+			SpecCategoryOnLaunchButton.CheckImage.Image = ""
 		end
 	end)
 
@@ -3622,19 +4033,19 @@ local function CreateGui()
 
 	PurpleThemeColor.MouseButton1Click:Connect(function()
 		Theme = "LightPurple"
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Changed theme", Text = "Changed theme to LightPurple, please restart GUI", Duration = 3})
+		Notify({Title = "Changed theme", Text = "Changed theme to <b>Light Purple</b>, please restart GUI to apply", Time = 3})
 	end)
 	OrangeThemeColor.MouseButton1Click:Connect(function()
 		Theme = "LightOrange"
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Changed theme", Text = "Changed theme to LightOrange, please restart GUI", Duration = 3})
+		Notify({Title = "Changed theme", Text = "Changed theme to <b>Light Orange</b>, please restart GUI to apply", Time = 3})
 	end)
 	YellowThemeColor.MouseButton1Click:Connect(function()
 		Theme = "LightYellow"
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Changed theme", Text = "Changed theme to LightYellow, please restart GUI", Duration = 3})
+		Notify({Title = "Changed theme", Text = "Changed theme to <b>Light Yellow</b>, please restart GUI to apply", Time = 3})
 	end)
 	BlackThemeColor.MouseButton1Click:Connect(function()
 		Theme = "Black"
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Changed theme", Text = "Changed theme to Black, please restart GUI", Duration = 3})
+		Notify({Title = "Changed theme", Text = "Changed theme to <b>Black</b>, please restart GUI to apply", Time = 3})
 	end)
 
 	local UICornerOptionButton = SettingsStuff.UICornerOption
@@ -3746,9 +4157,9 @@ local function CreateGui()
 	end)
 
 	local HotkeysOptionButton = SettingsStuff.HotkeysOption
+	AddHoverText(HotkeysEditOption, "Enables hotkeys. you can use this setting to reload hotkeys if they aren't working")
 	HotkeysOptionButton.MouseButton1Click:Connect(function()
 		HotkeysEnabled = not HotkeysEnabled
-
 		if HotkeysEnabled == true then
 			BindHotkeys()
 			HotkeysOptionButton.CheckImage.Image = "rbxassetid://130396712201457"
@@ -3835,8 +4246,7 @@ local function CreateGui()
 	end)
 
 	ResetButton.MouseButton1Click:Connect(function()
-		print("--- Restarting Emoter GUI... ---")
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Restarting", Text = "Restarting Gui...", Duration = 3})
+		Notify({Title = "Restarting", Text = "Restarting Gui...", Time = 3})
 		table.clear(RestartAnimations)
 		StopAnimsEvent:Fire("Reset/Destroy")
 		SettingsFrame.Visible = false
@@ -3847,7 +4257,7 @@ local function CreateGui()
 
 	GithubLinkButton.MouseButton1Click:Connect(function()
 		setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/tree/main")
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Copied", Text = "Copied link to your clipboard!", Duration = 3})
+		Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
 	end)
 
 	UserInputService.InputBegan:Connect(function(input, processed)
@@ -3908,11 +4318,11 @@ local function CreateGui()
 	-- EMOTES
 
 	--[[Functions Template
-	local InstanceName = Instance.new("TextButton")
-	CreateAnimButton(InstanceName, "ButtonName", "ButtonText", "SFrameType (R6, R15 or Spec)", LayoutOrder)
-	PlayAnim(InstanceName, "AnimId", FadeTime, AnimSpeed, "PriorityPauseRunningIdle", Looped(true/false))
+	local Button = Instance.new("TextButton")
+	CreateAnim(Button, "ButtonName", "ButtonText", "SFrameType (R6, R15 or Spec)", LayoutOrder, "AnimId", FadeTime, AnimSpeed, "PriorityPauseRunningIdle", Looped(true/false))
 	]]
-	print("Adding Emotes from script...")
+	LoadingState = "Adding Emotes from script"
+	print(LoadingState)
 	--DivideFrames
 	CreateDivideFrame("Dances", 1, "R6")
 	CreateDivideFrame("Actions", 2, "R6")
@@ -3931,452 +4341,306 @@ local function CreateGui()
 	-- R6 Emotes
 	local function R6Anims()
 		local Dance1 = Instance.new("TextButton")
-		CreateAnimButton(Dance1, "Dance1", "Dance 1", "R6", 1)
-		PlayAnim(Dance1, "182491037", .1, 1, "PriorLow", true)
+		CreateAnim(Dance1, "Dance1", "Dance 1", "R6", 1, "182491037", .1, 1, "PriorLow", true)
 		local Dance2 = Instance.new("TextButton")
-		CreateAnimButton(Dance2, "Dance2", "Dance 2", "R6", 1)
-		PlayAnim(Dance2, "182436842", .1, 1, "PriorLow", true)
+		CreateAnim(Dance2, "Dance2", "Dance 2", "R6", 1, "182436842", .1, 1, "PriorLow", true)
 		local Dance3 = Instance.new("TextButton")
-		CreateAnimButton(Dance3, "Dance3", "Dance 3", "R6", 1)
-		PlayAnim(Dance3, "182491368", .1, 1, "PriorLow", true)
+		CreateAnim(Dance3, "Dance3", "Dance 3", "R6", 1, "182491368", .1, 1, "PriorLow", true)
 		local MoonDance = Instance.new("TextButton")
-		CreateAnimButton(MoonDance, "MoonDance", "Moon Dance", "R6", 1)
-		PlayAnim(MoonDance, "45834924", .1, 1, "PriorLow", true)
+		CreateAnim(MoonDance, "MoonDance", "Moon Dance", "R6", 1, "45834924", .1, 1, "PriorLow", true)
 		local SpinDance = Instance.new("TextButton")
-		CreateAnimButton(SpinDance, "SpinDance", "Spin Dance", "R6", 1)
-		PlayAnim(SpinDance, "429730430", .1, 1, "PriorLow", true)
+		CreateAnim(SpinDance, "SpinDance", "Spin Dance", "R6", 1, "429730430", .1, 1, "PriorLow", true)
 		local JumpingJacks = Instance.new("TextButton")
-		CreateAnimButton(JumpingJacks, "JumpingJacks", "Jumping Jacks", "R6", 1)
-		PlayAnim(JumpingJacks, "429681631", .1, 1, "PriorLow", true)
+		CreateAnim(JumpingJacks, "JumpingJacks", "Jumping Jacks", "R6", 1, "429681631", .1, 1, "PriorLow", true)
 		local Bang = Instance.new("TextButton")
-		CreateAnimButton(Bang, "Bang", "Bang", "R6", 1)
-		PlayAnim(Bang, "148840371", .1, 3, "PriorLow", true)
+		CreateAnim(Bang, "Bang", "Bang", "R6", 1, "148840371", .1, 3, "PriorLow", true)
 		local MovingDance = Instance.new("TextButton")
-		CreateAnimButton(MovingDance, "MovingDance", "Moving Dance", "R6", 1)
-		PlayAnim(MovingDance, "429703734", .1, 1, "PriorLow", true)
+		CreateAnim(MovingDance, "MovingDance", "Moving Dance", "R6", 1, "429703734", .1, 1, "PriorLow", true)
 		local GoofyDance = Instance.new("TextButton")
-		CreateAnimButton(GoofyDance, "GoofyDance", "Goofy Dance", "R6", 1)
-		PlayAnim(GoofyDance, "27789359", .1, 0.8, "PriorLow", true)
+		CreateAnim(GoofyDance, "GoofyDance", "Goofy Dance", "R6", 1, "27789359", .1, 0.8, "PriorLow", true)
 		local WeirdDance = Instance.new("TextButton")
-		CreateAnimButton(WeirdDance, "WeirdDance", "Weird Dance", "R6", 1)
-		PlayAnim(WeirdDance, "28488254", .1, 0.8, "PriorLow", true)
+		CreateAnim(WeirdDance, "WeirdDance", "Weird Dance", "R6", 1, "28488254", .1, 0.8, "PriorLow", true)
 		local Laugh = Instance.new("TextButton")
-		CreateAnimButton(Laugh, "Laugh", "Laugh", "R6", 2)
-		PlayAnim(Laugh, "129423131", .1, 1, "PriorLow", false)
+		CreateAnim(Laugh, "Laugh", "Laugh", "R6", 2, "129423131", .1, 1, "PriorLow", false)
 		local Cheer = Instance.new("TextButton")
-		CreateAnimButton(Cheer, "Cheer", "Cheer", "R6", 2)
-		PlayAnim(Cheer, "129423030", .1, 1, "PriorLow", false)
+		CreateAnim(Cheer, "Cheer", "Cheer", "R6", 2, "129423030", .1, 1, "PriorLow", false)
 		local Point = Instance.new("TextButton")
-		CreateAnimButton(Point, "Point", "Point", "R6", 2)
-		PlayAnim(Point, "128853357", .1, 1, "PriorLow", false)
+		CreateAnim(Point, "Point", "Point", "R6", 2, "128853357", .1, 1, "PriorLow", false)
 		local Wave = Instance.new("TextButton")
-		CreateAnimButton(Wave, "Wave", "Wave", "R6", 2)
-		PlayAnim(Wave, "128777973", .1, 1, "PriorLow", false)
+		CreateAnim(Wave, "Wave", "Wave", "R6", 2, "128777973", .1, 1, "PriorLow", false)
 		local Dab = Instance.new("TextButton")
-		CreateAnimButton(Dab, "Dab", "Dab", "R6", 2)
-		PlayAnim(Dab, "248263260", .1, 1, "PriorLow", true)
+		CreateAnim(Dab, "Dab", "Dab", "R6", 2, "248263260", .1, 1, "PriorLow", true)
 		local ToolHandle = Instance.new("TextButton")
-		CreateAnimButton(ToolHandle, "ToolHandle", "Tool Handle", "R6", 2)
-		PlayAnim(ToolHandle, "125750867", .1, 1, "PriorHigh", true)
+		CreateAnim(ToolHandle, "ToolHandle", "Tool Handle", "R6", 2, "125750867", .1, 1, "PriorHigh", true)
 		local Crouch = Instance.new("TextButton")
-		CreateAnimButton(Crouch, "Crouch", "Crouch", "R6", 3)
-		PlayAnim(Crouch, "182724289", .1, 1, "PriorLow", true)
+		CreateAnim(Crouch, "Crouch", "Crouch", "R6", 3, "182724289", .1, 1, "PriorLow", true)
 		local Faint = Instance.new("TextButton")
-		CreateAnimButton(Faint, "Faint", "Faint", "R6", 3)
-		PlayAnim(Faint, "181526230", .1, 1, "PriorHigh", true)
+		CreateAnim(Faint, "Faint", "Faint", "R6", 3, "181526230", .1, 1, "PriorHigh", true)
 		local FloorCrawl = Instance.new("TextButton")
-		CreateAnimButton(FloorCrawl, "FloorCrawl", "Floor Crawl", "R6", 3)
-		PlayAnim(FloorCrawl, "282574440", .1, 1, "PriorLow", true)
+		CreateAnim(FloorCrawl, "FloorCrawl", "Floor Crawl", "R6", 3, "282574440", .1, 1, "PriorLow", true)
 		local Levitate = Instance.new("TextButton")
-		CreateAnimButton(Levitate, "Levitate", "Levitate", "R6", 3)
-		PlayAnim(Levitate, "313762630", .1, 1, "PriorHigh", true)
+		CreateAnim(Levitate, "Levitate", "Levitate", "R6", 3, "313762630", .1, 1, "PriorHigh", true)
 		local DinoWalk = Instance.new("TextButton")
-		CreateAnimButton(DinoWalk, "DinoWalk", "Dino Walk", "R6", 3)
-		PlayAnim(DinoWalk, "204328711", .1, 1.5, "PriorLowRunning", true)
+		CreateAnim(DinoWalk, "DinoWalk", "Dino Walk", "R6", 3, "204328711", .1, 1.5, "PriorLowRunning", true)
 		local Climb = Instance.new("TextButton")
-		CreateAnimButton(Climb, "Climb", "Climb Walk", "R6", 3)
-		PlayAnim(Climb, "125750800", .1, 1, "PriorLow", true)
+		CreateAnim(Climb, "Climb", "Climb Walk", "R6", 3, "125750800", .1, 1, "PriorLow", true)
 		local Scared = Instance.new("TextButton")
-		CreateAnimButton(Scared, "Scared", "Scared", "R6", 3)
-		PlayAnim(Scared, "180612465", .1, 0.3, "PriorLowPause", true)
+		CreateAnim(Scared, "Scared", "Scared", "R6", 3, "180612465", .1, 0.3, "PriorLowPause", true)
 		local FloatingHead = Instance.new("TextButton")
-		CreateAnimButton(FloatingHead, "FloatingHead", "Floating Head", "R6", 3)
-		PlayAnim(FloatingHead, "121572214", .1, 1, "PriorHigh", true)
+		CreateAnim(FloatingHead, "FloatingHead", "Floating Head", "R6", 3, "121572214", .1, 1, "PriorHigh", true)
 		local FloatSit = Instance.new("TextButton")
-		CreateAnimButton(FloatSit, "FloatSit", "Float Sit", "R6", 3)
-		PlayAnim(FloatSit, "179224234", .5, 1, "PriorLow", true)
+		CreateAnim(FloatSit, "FloatSit", "Float Sit", "R6", 3, "179224234", .5, 1, "PriorLow", true)
 		local Spinner = Instance.new("TextButton")
-		CreateAnimButton(Spinner, "Spinner", "Spinner", "R6", 4)
-		PlayAnim(Spinner, "188632011", .1, 2, "PriorHigh", true)
+		CreateAnim(Spinner, "Spinner", "Spinner", "R6", 4, "188632011", .1, 2, "PriorHigh", true)
 		local StrangePos = Instance.new("TextButton")
-		CreateAnimButton(StrangePos, "StrangePos", "Strange Position", "R6", 4)
-		PlayAnim(StrangePos, "248336459", .1, 1, "PriorLow", true)
+		CreateAnim(StrangePos, "StrangePos", "Strange Position", "R6", 4, "248336459", .1, 1, "PriorLow", true)
 		local HeadThrow = Instance.new("TextButton")
-		CreateAnimButton(HeadThrow, "HeadThrow", "Head Throw", "R6", 4)
-		PlayAnim(HeadThrow, "35154961", .1, 1, "PriorHigh", false)
+		CreateAnim(HeadThrow, "HeadThrow", "Head Throw", "R6", 4, "35154961", .1, 1, "PriorHigh", false)
 		local ArmTurbine = Instance.new("TextButton")
-		CreateAnimButton(ArmTurbine, "ArmTurbine", "Arm Turbine", "R6", 4)
-		PlayAnim(ArmTurbine, "259438880", .1, 3, "PriorLow", true)
+		CreateAnim(ArmTurbine, "ArmTurbine", "Arm Turbine", "R6", 4, "259438880", .1, 3, "PriorLow", true)
 		local BarrelRoll = Instance.new("TextButton")
-		CreateAnimButton(BarrelRoll, "BarrelRoll", "Barrel Roll", "R6", 4)
-		PlayAnim(BarrelRoll, "136801964", .1, 1, "PriorLow", true)
+		CreateAnim(BarrelRoll, "BarrelRoll", "Barrel Roll", "R6", 4, "136801964", .1, 1, "PriorLow", true)
 		local MegaInsane = Instance.new("TextButton")
-		CreateAnimButton(MegaInsane, "MegaInsane", "Mega Insane", "R6", 4)
-		PlayAnim(MegaInsane, "184574340", .1, 40, "PriorLow", true)
+		CreateAnim(MegaInsane, "MegaInsane", "Mega Insane", "R6", 4, "184574340", .1, 40, "PriorLow", true)
 		local WeirdMove = Instance.new("TextButton")
-		CreateAnimButton(WeirdMove, "WeirdMove", "Weird Move", "R6", 4)
-		PlayAnim(WeirdMove, "215384594", .1, 1, "PriorLow", true)
+		CreateAnim(WeirdMove, "WeirdMove", "Weird Move", "R6", 4, "215384594", .1, 1, "PriorLow", true)
 		local CloneIllusion = Instance.new("TextButton")
-		CreateAnimButton(CloneIllusion, "CloneIllusion", "Clone Illusion", "R6", 4)
-		PlayAnim(CloneIllusion, "215384594", .1, 1e10, "PriorLow", true)
+		CreateAnim(CloneIllusion, "CloneIllusion", "Clone Illusion", "R6", 4, "215384594", .1, 1e10, "PriorLow", true)
 		local Insane = Instance.new("TextButton")
-		CreateAnimButton(Insane, "Insane", "Insane", "R6", 4)
-		PlayAnim(Insane, "33796059", .1, 1e8, "PriorLow", true)
+		CreateAnim(Insane, "Insane", "Insane", "R6", 4, "33796059", .1, 1e8, "PriorLow", true)
 		local FullSwing = Instance.new("TextButton")
-		CreateAnimButton(FullSwing, "FullSwing", "Full Swing", "R6", 5)
-		PlayAnim(FullSwing, "218504594", .1, 1, "PriorHigh", false)
+		CreateAnim(FullSwing, "FullSwing", "Full Swing", "R6", 5, "218504594", .1, 1, "PriorHigh", false)
 		local NunchakSlash = Instance.new("TextButton")
-		CreateAnimButton(NunchakSlash, "NunchakSlash", "Nunchak Slash", "R6", 5)
-		PlayAnim(NunchakSlash, "204292303", .1, 1.5, "PriorLow", false)
+		CreateAnim(NunchakSlash, "NunchakSlash", "Nunchak Slash", "R6", 5, "204292303", .1, 1.5, "PriorLow", false)
 		local FullPunch = Instance.new("TextButton")
-		CreateAnimButton(FullPunch, "FullPunch", "Full Punch", "R6", 5)
-		PlayAnim(FullPunch, "204062532", .1, 1.5, "PriorLow", false)
+		CreateAnim(FullPunch, "FullPunch", "Full Punch", "R6", 5, "204062532", .1, 1.5, "PriorLow", false)
 		local SwordSpin = Instance.new("TextButton")
-		CreateAnimButton(SwordSpin, "SwordSpin", "Sword Spin", "R6", 5)
-		PlayAnim(SwordSpin, "186934910", .1, 0.8, "PriorLow", false)
+		CreateAnim(SwordSpin, "SwordSpin", "Sword Spin", "R6", 5, "186934910", .1, 0.8, "PriorLow", false)
 		local Punches = Instance.new("TextButton")
-		CreateAnimButton(Punches, "Punches", "Punches", "R6", 5)
-		PlayAnim(Punches, "126753849", .1, 2, "PriorLow", false)
+		CreateAnim(Punches, "Punches", "Punches", "R6", 5, "126753849", .1, 2, "PriorLow", false)
 		local HeroJump = Instance.new("TextButton")
-		CreateAnimButton(HeroJump, "HeroJump", "Hero Jump", "R6", 5)
-		PlayAnim(HeroJump, "184574340", .1, 1, "PriorLow", false)
+		CreateAnim(HeroJump, "HeroJump", "Hero Jump", "R6", 5, "184574340", .1, 1, "PriorLow", false)
 		local DoubleSlash = Instance.new("TextButton")
-		CreateAnimButton(DoubleSlash, "DoubleSlash", "Double Slash", "R6", 5)
-		PlayAnim(DoubleSlash, "35978879", .1, 2, "PriorLow", false)
+		CreateAnim(DoubleSlash, "DoubleSlash", "Double Slash", "R6", 5, "35978879", .1, 2, "PriorLow", false)
 		local SwordSwing = Instance.new("TextButton")
-		CreateAnimButton(SwordSwing, "SwordSwing", "Sword Swing", "R6", 5)
-		PlayAnim(SwordSwing, "32659699", .1, 1, "PriorLow", false)
+		CreateAnim(SwordSwing, "SwordSwing", "Sword Swing", "R6", 5, "32659699", .1, 1, "PriorLow", false)
 	end
 
 	--R15 Emotes
 	local function R15Anims()
 		local Dance1 = Instance.new("TextButton")
-		CreateAnimButton(Dance1, "Dance1", "Dance 1", "R15", 1)
-		PlayAnim(Dance1, "507771955", .1, 1, "PriorLow", true)
+		CreateAnim(Dance1, "Dance1", "Dance 1", "R15", 1, "507771955", .1, 1, "PriorLow", true)
 		local Dance2 = Instance.new("TextButton")
-		CreateAnimButton(Dance2, "Dance2", "Dance 2", "R15", 1)
-		PlayAnim(Dance2, "507776720", .1, 1, "PriorLow", true)
+		CreateAnim(Dance2, "Dance2", "Dance 2", "R15", 1, "507776720", .1, 1, "PriorLow", true)
 		local Dance3 = Instance.new("TextButton")
-		CreateAnimButton(Dance3, "Dance3", "Dance 3", "R15", 1)
-		PlayAnim(Dance3, "507777451", .1, 1, "PriorLow", true)
+		CreateAnim(Dance3, "Dance3", "Dance 3", "R15", 1, "507777451", .1, 1, "PriorLow", true)
 		local FlossDance = Instance.new("TextButton")
-		CreateAnimButton(FlossDance, "FlossDance", "Floss Dance", "R15", 1)
-		PlayAnim(FlossDance, "10714340543", .1, 1, "PriorLow", true)
+		CreateAnim(FlossDance, "FlossDance", "Floss Dance", "R15", 1, "10714340543", .1, 1, "PriorLow", true)
 		local Monkey = Instance.new("TextButton")
-		CreateAnimButton(Monkey, "Monkey", "Monkey", "R15", 1)
-		PlayAnim(Monkey, "10714388352", .1, 1, "PriorLow", true)
+		CreateAnim(Monkey, "Monkey", "Monkey", "R15", 1, "10714388352", .1, 1, "PriorLow", true)
 		local IWantMoneyDance = Instance.new("TextButton")
-		CreateAnimButton(IWantMoneyDance, "IWantMoneyDance", "IWantMoney Dance", "R15", 1)
-		PlayAnim(IWantMoneyDance, "115781688996859", .1, 1, "PriorLow", true)
+		CreateAnim(IWantMoneyDance, "IWantMoneyDance", "IWantMoney Dance", "R15", 1, "115781688996859", .1, 1, "PriorLow", true)
 		local FortniteDance = Instance.new("TextButton")
-		CreateAnimButton(FortniteDance, "FortniteDance", "Fortnite Dance", "R15", 1)
-		PlayAnim(FortniteDance, "88455578674030", .1, 1, "PriorLow", true)
+		CreateAnim(FortniteDance, "FortniteDance", "Fortnite Dance", "R15", 1, "88455578674030", .1, 1, "PriorLow", true)
 		local GangnamStyle = Instance.new("TextButton")
-		CreateAnimButton(GangnamStyle, "GangnamStyle", "Gangnam Style", "R15", 1)
-		PlayAnim(GangnamStyle, "129764254213842", .1, 0.9, "PriorLow", true)
+		CreateAnim(GangnamStyle, "GangnamStyle", "Gangnam Style", "R15", 1, "129764254213842", .1, 0.9, "PriorLow", true)
 		local RussianKick = Instance.new("TextButton")
-		CreateAnimButton(RussianKick, "RussianKick", "Russian Kick", "R15", 1)
-		PlayAnim(RussianKick, "70653974473742", .1, 1, "PriorLow", true)
+		CreateAnim(RussianKick, "RussianKick", "Russian Kick", "R15", 1, "70653974473742", .1, 1, "PriorLow", true, "70653974473742", .1, 1, "PriorLow", true)
 		local MannrobicsDance = Instance.new("TextButton")
-		CreateAnimButton(MannrobicsDance, "MannrobicsDance", "Mannrobics Dance", "R15", 1)
-		PlayAnim(MannrobicsDance, "73932117454031", .1, 1, "PriorLow", true)
+		CreateAnim(MannrobicsDance, "MannrobicsDance", "Mannrobics Dance", "R15", 1, "73932117454031", .1, 1, "PriorLow", true)
 		local PennywiseDance = Instance.new("TextButton")
-		CreateAnimButton(PennywiseDance, "PennywiseDance", "Pennywise Dance", "R15", 1)
-		PlayAnim(PennywiseDance, "138755180984581", .1, 1, "PriorLow", true)
+		CreateAnim(PennywiseDance, "PennywiseDance", "Pennywise Dance", "R15", 1, "138755180984581", .1, 1, "PriorLow", true)
 		local BreakDance = Instance.new("TextButton")
-		CreateAnimButton(BreakDance, "BreakDance", "Break Dance", "R15", 1)
-		PlayAnim(BreakDance, "10214311282", .1, 1, "PriorLow", true)
+		CreateAnim(BreakDance, "BreakDance", "Break Dance", "R15", 1, "10214311282", .1, 1, "PriorLow", true)
 		local Rambunctious = Instance.new("TextButton")
-		CreateAnimButton(Rambunctious, "Rambunctious", "Rambunctious", "R15", 1)
-		PlayAnim(Rambunctious, "129991743366120", .1, 1, "PriorLow", true)
+		CreateAnim(Rambunctious, "Rambunctious", "Rambunctious", "R15", 1, "129991743366120", .1, 1, "PriorLow", true)
 		local NightmailDance = Instance.new("TextButton")
-		CreateAnimButton(NightmailDance, "NightmailDance", "Nightmail Dance", "R15", 1)
-		PlayAnim(NightmailDance, "103655955630769", .1, 1, "PriorLow", true)
+		CreateAnim(NightmailDance, "NightmailDance", "Nightmail Dance", "R15", 1, "103655955630769", .1, 1, "PriorLow", true)
 		local TennaArmDance = Instance.new("TextButton")
-		CreateAnimButton(TennaArmDance, "TennaArmDance", "Tenna Arm Dance", "R15", 1)
-		PlayAnim(TennaArmDance, "140315159513795", .1, 1.1, "PriorLow", true)
+		CreateAnim(TennaArmDance, "TennaArmDance", "Tenna Arm Dance", "R15", 1, "140315159513795", .1, 1.1, "PriorLow", true)
 		local TennaSwingDance = Instance.new("TextButton")
-		CreateAnimButton(TennaSwingDance, "TennaSwingDance", "Tenna Swing Dance", "R15", 1)
-		PlayAnim(TennaSwingDance, "77984841414450", .1, 1, "PriorLow", true)
+		CreateAnim(TennaSwingDance, "TennaSwingDance", "Tenna Swing Dance", "R15", 1, "77984841414450", .1, 1, "PriorLow", true)
 		local TakeTheL = Instance.new("TextButton")
-		CreateAnimButton(TakeTheL, "TakeTheL", "Take The L", "R15", 1)
-		PlayAnim(TakeTheL, "78870781032132", .1, 1, "PriorLow", true)
+		CreateAnim(TakeTheL, "TakeTheL", "Take The L", "R15", 1, "78870781032132", .1, 1, "PriorLow", true)
 		local JumpJacks = Instance.new("TextButton")
-		CreateAnimButton(JumpJacks, "JumpJacks", "Jump Jacks", "R15", 1)
-		PlayAnim(JumpJacks, "10714375667", .1, 1, "PriorLow", true)
+		CreateAnim(JumpJacks, "JumpJacks", "Jump Jacks", "R15", 1, "10714375667", .1, 1, "PriorLow", true)
 
 		local Wave = Instance.new("TextButton")
-		CreateAnimButton(Wave, "Wave", "Wave", "R15", 2)
-		PlayAnim(Wave, "10714359093", .1, 1, "PriorLow", false)
+		CreateAnim(Wave, "Wave", "Wave", "R15", 2, "10714359093", .1, 1, "PriorLow", false)
 		local HighWave = Instance.new("TextButton")
-		CreateAnimButton(HighWave, "HighWave", "HighWave", "R15", 2)
-		PlayAnim(HighWave, "10714362852", .1, 1, "PriorLow", false)
+		CreateAnim(HighWave, "HighWave", "HighWave", "R15", 2, "10714362852", .1, 1, "PriorLow", true)
 		local AwkwardWave = Instance.new("TextButton")
-		CreateAnimButton(AwkwardWave, "AwkwardWave", "Awkward Wave", "R15", 2)
-		PlayAnim(AwkwardWave, "86074172929360", .1, 1, "PriorLow", true)
+		CreateAnim(AwkwardWave, "AwkwardWave", "Awkward Wave", "R15", 2, "86074172929360", .1, 1, "PriorLow", true)
 		local Point = Instance.new("TextButton")
-		CreateAnimButton(Point, "Point", "Point", "R15", 2)
-		PlayAnim(Point, "10714395441", .1, 1, "PriorLow", false)
+		CreateAnim(Point, "Point", "Point", "R15", 2, "10714395441", .1, 1, "PriorLow", false)
 		local Beckon = Instance.new("TextButton")
-		CreateAnimButton(Beckon, "Beckon", "Beckon", "R15", 2)
-		PlayAnim(Beckon, "10713984554", .1, 1, "PriorLow", false)
+		CreateAnim(Beckon, "Beckon", "Beckon", "R15", 2, "10713984554", .1, 1, "PriorLow", true)
 		local Happy = Instance.new("TextButton")
-		CreateAnimButton(Happy, "Happy", "Happy", "R15", 2)
-		PlayAnim(Happy, "10714352626", .1, 1, "PriorLow", false)
+		CreateAnim(Happy, "Happy", "Happy", "R15", 2, "10714352626", .1, 1, "PriorLow", true)
 		local Cheer = Instance.new("TextButton")
-		CreateAnimButton(Cheer, "Cheer", "Cheer", "R15", 2)
-		PlayAnim(Cheer, "507770677", .1, 1, "PriorLow", false)
+		CreateAnim(Cheer, "Cheer", "Cheer", "R15", 2, "507770677", .1, 1, "PriorLow", false)
 		local Celebrate = Instance.new("TextButton")
-		CreateAnimButton(Celebrate, "Celebrate", "Celebrate", "R15", 2)
-		PlayAnim(Celebrate, "10714016223", .1, 1, "PriorLow", false)
+		CreateAnim(Celebrate, "Celebrate", "Celebrate", "R15", 2, "10714016223", .1, 1, "PriorLow", false)
 		local Salute = Instance.new("TextButton")
-		CreateAnimButton(Salute, "Salute", "Salute", "R15", 2)
-		PlayAnim(Salute, "10714389988", .1, 1, "PriorLow", false)
+		CreateAnim(Salute, "Salute", "Salute", "R15", 2, "10714389988", .1, 1, "PriorLow", false)
 		local Shrug = Instance.new("TextButton")
-		CreateAnimButton(Shrug, "Shrug", "Shrug", "R15", 2)
-		PlayAnim(Shrug, "10714374484", .1, 1, "PriorLow", false)
+		CreateAnim(Shrug, "Shrug", "Shrug", "R15", 2, "10714374484", .1, 1, "PriorLow", false)
 		local Thinking = Instance.new("TextButton")
-		CreateAnimButton(Thinking, "Thinking", "Thinking", "R15", 2)
-		PlayAnim(Thinking, "123167401858016", .1, 1, "PriorLow", false)
+		CreateAnim(Thinking, "Thinking", "Thinking", "R15", 2, "123167401858016", .1, 1, "PriorLow", true)
 		local Confused = Instance.new("TextButton")
-		CreateAnimButton(Confused, "Confused", "Confused", "R15", 2)
-		PlayAnim(Confused, "4940561610", .1, 1, "PriorLow", false)
+		CreateAnim(Confused, "Confused", "Confused", "R15", 2, "4940561610", .1, 1, "PriorLow", false)
 		local Agree = Instance.new("TextButton")
-		CreateAnimButton(Agree, "Agree", "Agree", "R15", 2)
-		PlayAnim(Agree, "10713954623", .1, 1, "PriorLow", false)
+		CreateAnim(Agree, "Agree", "Agree", "R15", 2, "10713954623", .1, 1, "PriorLow", false)
 		local Disagree = Instance.new("TextButton")
-		CreateAnimButton(Disagree, "Disagree", "Disagree", "R15", 2)
-		PlayAnim(Disagree, "10714065135", .1, 1, "PriorLow", false)
+		CreateAnim(Disagree, "Disagree", "Disagree", "R15", 2, "10714065135", .1, 1, "PriorLow", false)
 		local DolphinBang = Instance.new("TextButton")
-		CreateAnimButton(DolphinBang, "DolphinBang", "Dolphin Bang", "R15", 2)
-		PlayAnim(DolphinBang, "10714068222", .1, 1, "PriorLow", false)
+		CreateAnim(DolphinBang, "DolphinBang", "Dolphin Bang", "R15", 2, "10714068222", .1, 1, "PriorLow", false)
 		local Twirl = Instance.new("TextButton")
-		CreateAnimButton(Twirl, "Twirl", "Twirl", "R15", 2)
-		PlayAnim(Twirl, "10714293450", .1, 1, "PriorLow", false)
+		CreateAnim(Twirl, "Twirl", "Twirl", "R15", 2, "10714293450", .1, 1, "PriorLow", false)
 		local HeroLanding = Instance.new("TextButton")
-		CreateAnimButton(HeroLanding, "HeroLanding", "Hero Landing", "R15", 2)
-		PlayAnim(HeroLanding, "10714360164", .1, 1, "PriorLow", false)
+		CreateAnim(HeroLanding, "HeroLanding", "Hero Landing", "R15", 2, "10714360164", .1, 1, "PriorLow", false)
 		local Shy = Instance.new("TextButton")
-		CreateAnimButton(Shy, "Shy", "Shy", "R15", 2)
-		PlayAnim(Shy, "10714369325", .1, 1, "PriorLow", false)
+		CreateAnim(Shy, "Shy", "Shy", "R15", 2, "10714369325", .1, 1, "PriorLow", false)
 		local Coward = Instance.new("TextButton")
-		CreateAnimButton(Coward, "Coward", "Coward", "R15", 2)
-		PlayAnim(Coward, "4940563117", .1, 1, "PriorLow", false)
+		CreateAnim(Coward, "Coward", "Coward", "R15", 2, "4940563117", .1, 1, "PriorLow", false)
 		local Dizzy = Instance.new("TextButton")
-		CreateAnimButton(Dizzy, "Dizzy", "Dizzy", "R15", 2)
-		PlayAnim(Dizzy, "10714066964", .1, 1, "PriorLow", false)
+		CreateAnim(Dizzy, "Dizzy", "Dizzy", "R15", 2, "10714066964", .1, 1, "PriorLow", false)
 		local PushUp = Instance.new("TextButton")
-		CreateAnimButton(PushUp, "PushUp", "Push Ups", "R15", 2)
-		PlayAnim(PushUp, "80326183054599", .1, 1, "PriorLow", true)
+		CreateAnim(PushUp, "PushUp", "Push Ups", "R15", 2, "80326183054599", .1, 1, "PriorLow", true)
 		local Bodybuilder = Instance.new("TextButton")
-		CreateAnimButton(Bodybuilder, "Bodybuilder", "Bodybuilder", "R15", 2)
-		PlayAnim(Bodybuilder, "10713990381", .1, 1, "PriorLow", true)
+		CreateAnim(Bodybuilder, "Bodybuilder", "Bodybuilder", "R15", 2, "10713990381", .1, 1, "PriorLow", false)
 		local Laugh = Instance.new("TextButton")
-		CreateAnimButton(Laugh, "Laugh", "Laugh", "R15", 2)
-		PlayAnim(Laugh, "507770818", .1, 1, "PriorLow", false)
+		CreateAnim(Laugh, "Laugh", "Laugh", "R15", 2, "507770818", .1, 1, "PriorLow", false)
 		local BigLaugh = Instance.new("TextButton")
-		CreateAnimButton(BigLaugh, "BigLaugh", "Big Laugh", "R15", 2)
-		PlayAnim(BigLaugh, "98974619620224", .1, 1, "PriorLow", true)
+		CreateAnim(BigLaugh, "BigLaugh", "Big Laugh", "R15", 2, "98974619620224", .1, 1, "PriorLow", true)
 		local Bored = Instance.new("TextButton")
-		CreateAnimButton(Bored, "Bored", "Bored", "R15", 2)
-		PlayAnim(Bored, "10713992055", .1, 1, "PriorLow", true)
+		CreateAnim(Bored, "Bored", "Bored", "R15", 2, "10713992055", .1, 1, "PriorLow", true)
 		local Applaud = Instance.new("TextButton")
-		CreateAnimButton(Applaud, "Applaud", "Applaud", "R15", 2)
-		PlayAnim(Applaud, "10713966026", .1, 1, "PriorLow", true)
+		CreateAnim(Applaud, "Applaud", "Applaud", "R15", 2, "10713966026", .1, 1, "PriorLow", true)
 		local FakeDeath = Instance.new("TextButton")
-		CreateAnimButton(FakeDeath, "FakeDeath", "FakeDeath", "R15", 2)
-		PlayAnim(FakeDeath, "88130117312312", .1, 1, "PriorLowPause", true)
+		CreateAnim(FakeDeath, "FakeDeath", "FakeDeath", "R15", 2, "88130117312312", .1, 1, "PriorLowPause", true)
 
 		local Tank = Instance.new("TextButton")
-		CreateAnimButton(Tank, "Tank", "Tank", "R15", 3)
-		PlayAnim(Tank, "115951523870527", .5, 1, "PriorLow", true)
+		CreateAnim(Tank, "Tank", "Tank", "R15", 3, "115951523870527", .5, 1, "PriorLow", true)
 		local RaceCar = Instance.new("TextButton")
-		CreateAnimButton(RaceCar, "RaceCar", "Race Car", "R15", 3)
-		PlayAnim(RaceCar, "72382226286301", .5, 1, "PriorLow", true)
+		CreateAnim(RaceCar, "RaceCar", "Race Car", "R15", 3, "72382226286301", .5, 1, "PriorLow", true)
 		local Helicopter = Instance.new("TextButton")
-		CreateAnimButton(Helicopter, "Helicopter", "Helicopter", "R15", 3)
-		PlayAnim(Helicopter, "76510079095692", .5, 1, "PriorLow", true)
+		CreateAnim(Helicopter, "Helicopter", "Helicopter", "R15", 3, "76510079095692", .5, 1, "PriorLow", true)
 		local CarDriving = Instance.new("TextButton")
-		CreateAnimButton(CarDriving, "CarDriving", "Car Driving", "R15", 3)
-		PlayAnim(CarDriving, "132471972345518", .5, 0.5, "PriorLow", true)
+		CreateAnim(CarDriving, "CarDriving", "Car Driving", "R15", 3, "132471972345518", .5, 0.5, "PriorLow", true)
 		local Crawl = Instance.new("TextButton")
-		CreateAnimButton(Crawl, "Crawl", "Crawl", "R15", 3)
-		PlayAnim(Crawl, "106501741606953", .1, 1, "PriorLow", true)
+		CreateAnim(Crawl, "Crawl", "Crawl", "R15", 3, "106501741606953", .1, 1, "PriorLow", true)
 		local BigBadWolf = Instance.new("TextButton")
-		CreateAnimButton(BigBadWolf, "BigBadWolf", "Big Bad Wolf", "R15", 3)
-		PlayAnim(BigBadWolf, "84490859002106", .1, 1, "PriorLow", true)
+		CreateAnim(BigBadWolf, "BigBadWolf", "Big Bad Wolf", "R15", 3, "84490859002106", .1, 1, "PriorLow", true)
 		local Wheel = Instance.new("TextButton")
-		CreateAnimButton(Wheel, "Wheel", "Wheel", "R15", 3)
-		PlayAnim(Wheel, "116700088132671", .1, 0.65, "PriorLowRunning", true)
+		CreateAnim(Wheel, "Wheel", "Wheel", "R15", 3, "116700088132671", .1, 0.65, "PriorLowRunning", true)
 		local DefaultR6Run = Instance.new("TextButton")
-		CreateAnimButton(DefaultR6Run, "DefaultR6Run", "R6 Run", "R15", 3)
-		PlayAnim(DefaultR6Run, "88923549940250", .1, 1, "PriorLowRunning", true)
+		CreateAnim(DefaultR6Run, "DefaultR6Run", "R6 Run", "R15", 3, "88923549940250", .1, 1, "PriorLowRunning", true)
 		local MiniWalk = Instance.new("TextButton")
-		CreateAnimButton(MiniWalk, "MiniWalk", "Mini Walk", "R15", 3)
-		PlayAnim(MiniWalk, "85887415033585", .1, 1.3, "PriorLowRunning", true)
+		CreateAnim(MiniWalk, "MiniWalk", "Mini Walk", "R15", 3, "85887415033585", .1, 1.3, "PriorLowRunning", true)
 		local MedusaWalk = Instance.new("TextButton")
-		CreateAnimButton(MedusaWalk, "MedusaWalk", "Medusa Walk", "R15", 3)
-		PlayAnim(MedusaWalk, "131663132818596", .1, 1.5, "PriorLowRunning", true)
+		CreateAnim(MedusaWalk, "MedusaWalk", "Medusa Walk", "R15", 3, "131663132818596", .1, 1.5, "PriorLowRunning", true)
 		local TallWalk = Instance.new("TextButton")
-		CreateAnimButton(TallWalk, "TallWalk", "Tall Walk", "R15", 3)
-		PlayAnim(TallWalk, "134010853417610", .1, 1.5, "PriorLowRunning", true)
+		CreateAnim(TallWalk, "TallWalk", "Tall Walk", "R15", 3, "134010853417610", .1, 1.5, "PriorLowRunning", true)
 		local ShadowRun = Instance.new("TextButton")
-		CreateAnimButton(ShadowRun, "ShadowRun", "Shadow Running", "R15", 3)
-		PlayAnim(ShadowRun, "82598234841035", .1, 0.8, "PriorLowRunning", true)
+		CreateAnim(ShadowRun, "ShadowRun", "Shadow Running", "R15", 3, "82598234841035", .1, 0.8, "PriorLowRunning", true)
 		local AdidasRun = Instance.new("TextButton")
-		CreateAnimButton(AdidasRun, "AdidasRun", "Adidas Running", "R15", 3)
-		PlayAnim(AdidasRun, "18537384940", .1, 1, "PriorLowRunning", true)
+		CreateAnim(AdidasRun, "AdidasRun", "Adidas Running", "R15", 3, "18537384940", .1, 1, "PriorLowRunning", true)
 		local HappyRun = Instance.new("TextButton")
-		CreateAnimButton(HappyRun, "HappyRun", "Happy Run", "R15", 3)
-		PlayAnim(HappyRun, "136336776520965", .1, 1, "PriorLowRunning", true)
+		CreateAnim(HappyRun, "HappyRun", "Happy Run", "R15", 3, "136336776520965", .1, 1, "PriorLowRunning", true)
 		local FloatingRun = Instance.new("TextButton")
-		CreateAnimButton(FloatingRun, "FloatingRun", "Floating Run", "R15", 3)
-		PlayAnim(FloatingRun, "98995968630900", .1, 1, "PriorLowRunning", true)
+		CreateAnim(FloatingRun, "FloatingRun", "Floating Run", "R15", 3, "98995968630900", .1, 1, "PriorLowRunning", true)
 		local MotionRun = Instance.new("TextButton")
-		CreateAnimButton(MotionRun, "MotionRun", "Motion Run", "R15", 3)
-		PlayAnim(MotionRun, "101925097435036", .1, 1, "PriorLowRunning", true)
+		CreateAnim(MotionRun, "MotionRun", "Motion Run", "R15", 3, "101925097435036", .1, 1, "PriorLowRunning", true)
 
 		local HappyIdle = Instance.new("TextButton")
-		CreateAnimButton(HappyIdle, "HappyIdle", "Happy Idle", "R15", 4)
-		PlayAnim(HappyIdle, "88212525150688", .1, 1, "PriorLowIdle", true)
+		CreateAnim(HappyIdle, "HappyIdle", "Happy Idle", "R15", 4, "88212525150688", .1, 1, "PriorLowIdle", true)
 		local MiniIdle = Instance.new("TextButton")
-		CreateAnimButton(MiniIdle, "MiniIdle", "Mini Idle", "R15", 4)
-		PlayAnim(MiniIdle, "82127055873357", .1, 1, "PriorLowIdle", true)
+		CreateAnim(MiniIdle, "MiniIdle", "Mini Idle", "R15", 4, "82127055873357", .1, 1, "PriorLowIdle", true)
 		local VibeIdle = Instance.new("TextButton")
-		CreateAnimButton(VibeIdle, "VibeIdle", "Vibe Idle", "R15", 4)
-		PlayAnim(VibeIdle, "99638411514722", .1, 1, "PriorLowIdle", true)
+		CreateAnim(VibeIdle, "VibeIdle", "Vibe Idle", "R15", 4, "99638411514722", .1, 1, "PriorLowIdle", true)
 		local TallIdle = Instance.new("TextButton")
-		CreateAnimButton(TallIdle, "TallIdle", "Tall Idle", "R15", 4)
-		PlayAnim(TallIdle, "73645108622491", .1, 1, "PriorLowIdle", true)
+		CreateAnim(TallIdle, "TallIdle", "Tall Idle", "R15", 4, "73645108622491", .1, 1, "PriorLowIdle", true)
 		local WheelIdle = Instance.new("TextButton")
-		CreateAnimButton(WheelIdle, "WheelIdle", "Wheel Idle", "R15", 4)
-		PlayAnim(WheelIdle, "116700088132671", .1, 0, "PriorLowIdle", true)
+		CreateAnim(WheelIdle, "WheelIdle", "Wheel Idle", "R15", 4, "116700088132671", .1, 0, "PriorLowIdle", true)
 		local FloatingHeadSitting = Instance.new("TextButton")
-		CreateAnimButton(FloatingHeadSitting, "FloatingHeadSitting", "Floating Head Sit", "R15", 4)
-		PlayAnim(FloatingHeadSitting, "111681053387222", .1, 1, "PriorLow", true)
+		CreateAnim(FloatingHeadSitting, "FloatingHeadSitting", "Floating Head Sit", "R15", 4, "111681053387222", .1, 1, "PriorLow", true)
 		local FloatChillSit = Instance.new("TextButton")
-		CreateAnimButton(FloatChillSit, "FloatChillSit", "Float Chill Sit", "R15", 4)
-		PlayAnim(FloatChillSit, "110211186840347", .1, 0.5, "PriorLow", true)
+		CreateAnim(FloatChillSit, "FloatChillSit", "Float Chill Sit", "R15", 4, "110211186840347", .1, 0.5, "PriorLow", true)
 		local FloatIdle = Instance.new("TextButton")
-		CreateAnimButton(FloatIdle, "FloatIdle", "Float Idle", "R15", 4)
-		PlayAnim(FloatIdle, "90055248227279", .1, 1, "PriorLowIdle", true)
+		CreateAnim(FloatIdle, "FloatIdle", "Float Idle", "R15", 4, "90055248227279", .1, 1, "PriorLowIdle", true)
 		local DefaultR6Idle = Instance.new("TextButton")
-		CreateAnimButton(DefaultR6Idle, "DefaultR6Idle", "R6 Idle", "R15", 4)
-		PlayAnim(DefaultR6Idle, "130392105157572", .1, 1, "PriorLowIdle", true)
+		CreateAnim(DefaultR6Idle, "DefaultR6Idle", "R6 Idle", "R15", 4, "130392105157572", .1, 1, "PriorLowIdle", true)
 		local TPose = Instance.new("TextButton")
-		CreateAnimButton(TPose, "TPose", "T Pose", "R15", 4)
-		PlayAnim(TPose, "121655148084031", .1, 1, "PriorLow", true)
+		CreateAnim(TPose, "TPose", "T Pose", "R15", 4, "121655148084031", .1, 1, "PriorLow", true)
 		local CrouchR15 = Instance.new("TextButton")
-		CreateAnimButton(CrouchR15, "CrouchR15", "Crouch", "R15", 4)
-		PlayAnim(CrouchR15, "97517127273301", .3, 1, "PriorLow", true)
+		CreateAnim(CrouchR15, "CrouchR15", "Crouch", "R15", 4, "97517127273301", .3, 1, "PriorLow", true)
 		local Sitting = Instance.new("TextButton")
-		CreateAnimButton(Sitting, "Sitting", "Sitting", "R15", 4)
-		PlayAnim(Sitting, "94763556845023", .1, 1, "PriorLow", true)
+		CreateAnim(Sitting, "Sitting", "Sitting", "R15", 4, "94763556845023", .1, 1, "PriorLow", true)
 		local MM2Sit = Instance.new("TextButton")
-		CreateAnimButton(MM2Sit, "MM2Sit", "MM2 Sit", "R15", 4)
-		PlayAnim(MM2Sit, "130577643309726", .1, 1, "PriorLow", true)
+		CreateAnim(MM2Sit, "MM2Sit", "MM2 Sit", "R15", 4, "130577643309726", .1, 1, "PriorLow", true)
 		local Box = Instance.new("TextButton")
-		CreateAnimButton(Box, "Box", "Box", "R15", 4)
-		PlayAnim(Box, "73753845465382", .1, 1, "PriorLow", true)
+		CreateAnim(Box, "Box", "Box", "R15", 4, "73753845465382", .1, 1, "PriorLow", true)
 		local Sleeping = Instance.new("TextButton")
-		CreateAnimButton(Sleeping, "Sleeping", "Sleeping", "R15", 4)
-		PlayAnim(Sleeping, "121641415206650", .5, 1, "PriorLow", true)
+		CreateAnim(Sleeping, "Sleeping", "Sleeping", "R15", 4, "121641415206650", .5, 1, "PriorLow", true)
 		local HeadJuggle = Instance.new("TextButton")
-		CreateAnimButton(HeadJuggle, "HeadJuggle", "Head Juggle", "R15", 4)
-		PlayAnim(HeadJuggle, "136767849845319", .1, 1, "PriorLow", true)
+		CreateAnim(HeadJuggle, "HeadJuggle", "Head Juggle", "R15", 4, "136767849845319", .1, 1, "PriorLow", true)
 		local FloatingOnClouds = Instance.new("TextButton")
-		CreateAnimButton(FloatingOnClouds, "FloatingOnClouds", "Floating On Clouds", "R15", 4)
-		PlayAnim(FloatingOnClouds, "77840765435893", .1, 1, "PriorLow", true)
+		CreateAnim(FloatingOnClouds, "FloatingOnClouds", "Floating On Clouds", "R15", 4, "77840765435893", .1, 1, "PriorLow", true)
 		local SitAnim = Instance.new("TextButton")
-		CreateAnimButton(SitAnim, "SitAnim", "Sit Anim", "R15", 4)
-		PlayAnim(SitAnim, "507768133", .1, 1, "PriorLow", true)
+		CreateAnim(SitAnim, "SitAnim", "Sit Anim", "R15", 4, "507768133", .1, 1, "PriorLow", true)
 		local ToolHandle = Instance.new("TextButton")
-		CreateAnimButton(ToolHandle, "ToolHandle", "Tool Handle", "R15", 4)
-		PlayAnim(ToolHandle, "507768375", .1, 1, "PriorHigh", true)
+		CreateAnim(ToolHandle, "ToolHandle", "Tool Handle", "R15", 4, "507768375", .1, 1, "PriorHigh", true)
 		local FightingIdle = Instance.new("TextButton")
-		CreateAnimButton(FightingIdle, "FightingIdle", "Fighting Idle", "R15", 4)
-		PlayAnim(FightingIdle, "105947156749343", .1, 1, "PriorLowIdle", true)
+		CreateAnim(FightingIdle, "FightingIdle", "Fighting Idle", "R15", 4, "105947156749343", .1, 1, "PriorLowIdle", true)
 
 		local JumpingSpider = Instance.new("TextButton")
-		CreateAnimButton(JumpingSpider, "JumpingSpider", "Jumping Spider", "R15", 5)
-		PlayAnim(JumpingSpider, "139310328821985", .1, 1, "PriorLow", true)
+		CreateAnim(JumpingSpider, "JumpingSpider", "Jumping Spider", "R15", 5, "139310328821985", .1, 1, "PriorLow", true)
 		local InsaneDog = Instance.new("TextButton")
-		CreateAnimButton(InsaneDog, "InsaneDog", "Insane Dog", "R15", 5)
-		PlayAnim(InsaneDog, "96435804447949", .1, 1, "PriorLow", true)
+		CreateAnim(InsaneDog, "InsaneDog", "Insane Dog", "R15", 5, "96435804447949", .1, 1, "PriorLow", true)
 		local WormAnim = Instance.new("TextButton")
-		CreateAnimButton(WormAnim, "WormAnim", "Worm Fly", "R15", 5)
-		PlayAnim(WormAnim, "135990691658209", .3, 1, "PriorLow", true)
+		CreateAnim(WormAnim, "WormAnim", "Worm Fly", "R15", 5, "135990691658209", .3, 1, "PriorLow", true)
 		local Orbit = Instance.new("TextButton")
-		CreateAnimButton(Orbit, "Orbit", "Orbit", "R15", 5)
-		PlayAnim(Orbit, "108359356964182", .5, 1, "PriorLow", true)
+		CreateAnim(Orbit, "Orbit", "Orbit", "R15", 5, "108359356964182", .5, 1, "PriorLow", true)
 		local Hanging = Instance.new("TextButton")
-		CreateAnimButton(Hanging, "Hanging", "Hanging", "R15", 5)
-		PlayAnim(Hanging, "125662782523118", .1, 1, "PriorLow", true)
+		CreateAnim(Hanging, "Hanging", "Hanging", "R15", 5, "125662782523118", .1, 1, "PriorLow", true)
 		local LaggyWalkTroll = Instance.new("TextButton")
-		CreateAnimButton(LaggyWalkTroll, "LaggyWalkTroll", "Laggy Walk Troll", "R15", 5)
-		PlayAnim(LaggyWalkTroll, "119199812452698", .1, 1, "PriorLow", true)
+		CreateAnim(LaggyWalkTroll, "LaggyWalkTroll", "Laggy Walk Troll", "R15", 5, "119199812452698", .1, 1, "PriorLow", true)
 		local InchWorm = Instance.new("TextButton")
-		CreateAnimButton(InchWorm, "InchWorm", "Inch Worm", "R15", 5)
-		PlayAnim(InchWorm, "119096405600200", .1, 1, "PriorLow", true)
+		CreateAnim(InchWorm, "InchWorm", "Inch Worm", "R15", 5, "119096405600200", .1, 1, "PriorLow", true)
 		local GoofyWiggle = Instance.new("TextButton")
-		CreateAnimButton(GoofyWiggle, "GoofyWiggle", "Goofy Wiggle", "R15", 5)
-		PlayAnim(GoofyWiggle, "74917195706355", .1, 1, "PriorLow", true)
+		CreateAnim(GoofyWiggle, "GoofyWiggle", "Goofy Wiggle", "R15", 5, "74917195706355", .1, 1, "PriorLow", true)
 		local Tornado = Instance.new("TextButton")
-		CreateAnimButton(Tornado, "Tornado", "Tornado", "R15", 5)
-		PlayAnim(Tornado, "135373056067761", .1, 1, "PriorLow", true)
+		CreateAnim(Tornado, "Tornado", "Tornado", "R15", 5, "135373056067761", .1, 1, "PriorLow", true)
 		local AdminFly = Instance.new("TextButton")
-		CreateAnimButton(AdminFly, "AdminFly", "Admin Fly", "R15", 5)
-		PlayAnim(AdminFly, "85063861261432", .1, 1, "PriorLow", true)
+		CreateAnim(AdminFly, "AdminFly", "Admin Fly", "R15", 5, "85063861261432", .1, 1, "PriorLow", true)
 		local ObbyHead = Instance.new("TextButton")
-		CreateAnimButton(ObbyHead, "ObbyHead", "Little Obbyist", "R15", 5)
-		PlayAnim(ObbyHead, "115569573258316", .1, 1, "PriorLow", true)
+		CreateAnim(ObbyHead, "ObbyHead", "Little Obbyist", "R15", 5, "115569573258316", .1, 1, "PriorLow", true)
 		local Insane = Instance.new("TextButton")
-		CreateAnimButton(Insane, "Insane", "Insane", "R15", 5)
-		PlayAnim(Insane, "93087898023268", .1, 1, "PriorLow", true)
+		CreateAnim(Insane, "Insane", "Insane", "R15", 5, "93087898023268", .1, 1, "PriorLow", true)
 		local GoofyFLY = Instance.new("TextButton")
-		CreateAnimButton(GoofyFLY, "GoofyFLY", "Goofy FLY", "R15", 5)
-		PlayAnim(GoofyFLY, "118417760427139", .1, 1, "PriorLow", true)
+		CreateAnim(GoofyFLY, "GoofyFLY", "Goofy FLY", "R15", 5, "118417760427139", .1, 1, "PriorLow", true)
 		local BodyPhone = Instance.new("TextButton")
-		CreateAnimButton(BodyPhone, "BodyPhone", "Body Phone", "R15", 5)
-		PlayAnim(BodyPhone, "73390669780316", .1, 0.8, "PriorLow", false)
+		CreateAnim(BodyPhone, "BodyPhone", "Body Phone", "R15", 5, "73390669780316", .1, 0.8, "PriorLow", false)
 		local Spin = Instance.new("TextButton")
-		CreateAnimButton(Spin, "Spin", "Spin", "R15", 5)
-		PlayAnim(Spin, "110792133024438", .1, 1, "PriorHigh", true)
+		CreateAnim(Spin, "Spin", "Spin", "R15", 5, "110792133024438", .1, 1, "PriorHigh", true)
 		local HyperSpin = Instance.new("TextButton")
-		CreateAnimButton(HyperSpin, "HyperSpin", "Hyper Spin", "R15", 5)
-		PlayAnim(HyperSpin, "125165371323590", .1, 1, "PriorLow", true)
+		CreateAnim(HyperSpin, "HyperSpin", "Hyper Spin", "R15", 5, "125165371323590", .1, 1, "PriorLow", true)
 		local SpinAround = Instance.new("TextButton")
-		CreateAnimButton(SpinAround, "SpinAround", "SpinAround", "R15", 5)
-		PlayAnim(SpinAround, "91004858616595", .1, 1, "PriorLow", true)
+		CreateAnim(SpinAround, "SpinAround", "SpinAround", "R15", 5, "91004858616595", .1, 1, "PriorLow", true)
 		local FloatingSpace = Instance.new("TextButton")
-		CreateAnimButton(FloatingSpace, "FloatingSpace", "Floating Space", "R15", 5)
-		PlayAnim(FloatingSpace, "71209604118044", .1, 1, "PriorLow", true)
+		CreateAnim(FloatingSpace, "FloatingSpace", "Floating Space", "R15", 5, "71209604118044", .1, 1, "PriorLow", true)
 		local FloatingSpace2 = Instance.new("TextButton")
-		CreateAnimButton(FloatingSpace2, "FloatingSpace2", "Floating Space 2", "R15", 5)
-		PlayAnim(FloatingSpace2, "70394064781064", .1, 0.5, "PriorLow", true)
+		CreateAnim(FloatingSpace2, "FloatingSpace2", "Floating Space 2", "R15", 5, "70394064781064", .1, 0.5, "PriorLow", true)
 
 		local DaHoodStomp = Instance.new("TextButton")
-		CreateAnimButton(DaHoodStomp, "DaHoodStomp", "DaHood Stomp", "R15", 6)
-		PlayAnim(DaHoodStomp, "92249489340640", .1, 1, "PriorLow", false)
+		CreateAnim(DaHoodStomp, "DaHoodStomp", "DaHood Stomp", "R15", 6, "92249489340640", .1, 1, "PriorLow", false)
 		local QuadPunch = Instance.new("TextButton")
-		CreateAnimButton(QuadPunch, "QuadPunch", "Quad Punch", "R15", 6)
-		PlayAnim(QuadPunch, "139643944264511", .1, 1, "PriorLow", false)
+		CreateAnim(QuadPunch, "QuadPunch", "Quad Punch", "R15", 6, "139643944264511", .1, 1, "PriorLow", false)
 		local TennaKick = Instance.new("TextButton")
-		CreateAnimButton(TennaKick, "TennaKick", "TennaKick", "R15", 6)
-		PlayAnim(TennaKick, "118139885865308", .1, 1, "PriorLow", false)
+		CreateAnim(TennaKick, "TennaKick", "TennaKick", "R15", 6, "118139885865308", .1, 1, "PriorLow", false)
 		local Dropkick = Instance.new("TextButton")
-		CreateAnimButton(Dropkick, "Dropkick", "Dropkick", "R15", 6)
-		PlayAnim(Dropkick, "133566007754001", .1, 1, "PriorLow", false)
+		CreateAnim(Dropkick, "Dropkick", "Dropkick", "R15", 6, "133566007754001", .1, 1, "PriorLow", false)
 	end
 
 	if RigType == "R6" then
@@ -4386,8 +4650,8 @@ local function CreateGui()
 	end
 
 	local CAOutput = "<b>CustomAnims:</b>\n"
-	local GSGAOutput = "<b>GameSpecificAnims from Github:</b>\n"
-	local LSGAOutput = "<b>GameSpecificAnims from local file:</b>\n"
+	local GSGAOutput = "<b>GameSpecificAnims from Github</b>"
+	local LSGAOutput = "<b>GameSpecificAnims from local file</b>"
 	local function AddDataOperation()
 		AddedDataInfo.Value = "<b>ADDED DATA FROM FILES:</b>\n\n"
 
@@ -4398,7 +4662,7 @@ local function CreateGui()
 				return game:HttpGet(finalUrl)
 			end)
 			if not success or not fileContent or fileContent == "404: Not Found" then
-				if DebugInfoEnabled then warn("[AdditionalAnims File]: Error 404 Occurred while trying to get file") end
+				if DebugInfoEnabled then warn("[AdditionalAnims File]: AdditionalAnims file wasn't found") end
 				return 
 			end
 			local success2, data = pcall(function()
@@ -4414,8 +4678,7 @@ local function CreateGui()
 					if DebugInfoEnabled then print("[AdditionalAnims File]: Extracting Animations") end
 					for _, info in ipairs(animationsList) do
 						local danceButton = Instance.new("TextButton")
-						CreateAnimButton(danceButton, info[1], info[2], info[3], info[4])
-						PlayAnim(danceButton, info[5], info[6], info[7], info[8], info[9])
+						CreateAnim(danceButton, info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9])
 					end
 				elseif categoryName == "DefaultAnims" and #data["DefaultAnims"] ~= 0 then
 					if DebugInfoEnabled then print("[AdditionalAnims File]: Adding Default animations")end
@@ -4452,8 +4715,7 @@ local function CreateGui()
 					CAOutput = CAOutput.."CustomEmotes\n"
 					for _, info in ipairs(animationsList) do
 						local danceButton = Instance.new("TextButton")
-						CreateAnimButton(danceButton, info[1], info[2], info[3], info[4])
-						PlayAnim(danceButton, info[5], info[6], info[7], info[8], info[9])
+						CreateAnim(danceButton, info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9])
 					end
 				elseif categoryName == "DefaultAnims" and #data["DefaultAnims"] ~= 0 then
 					if DebugInfoEnabled then print("[CustomAnims File]: Adding Default animations") end
@@ -4532,14 +4794,18 @@ local function CreateGui()
 				return
 			end
 
+			if data.AdditionalData and data.AdditionalData.Version then
+				GSGAOutput = GSGAOutput.." (<b>V "..data["AdditionalData"].Version..")</b>:\n"
+			else
+				GSGAOutput = GSGAOutput..":\n"
+			end
 			for categoryName, animationsList in pairs(data) do
 				if categoryName == "CustomEmotes" and #data["CustomEmotes"] ~= 0 then
 					if DebugInfoEnabled then print("[SpecGameAnims Github]: Extracting Animations") end
 					GSGAOutput = GSGAOutput.."CustomEmotes\n"
 					for _, info in ipairs(animationsList) do
 						local danceButton = Instance.new("TextButton")
-						CreateAnimButton(danceButton, info[1], info[2], info[3], info[4])
-						PlayAnim(danceButton, info[5], info[6], info[7], info[8], info[9])
+						CreateAnim(danceButton, info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9])
 					end
 				elseif categoryName == "DefaultAnims" and #data["DefaultAnims"] ~= 0 then
 					if DebugInfoEnabled then print("[SpecGameAnims Github]: Adding Default animations") end
@@ -4639,14 +4905,19 @@ local function CreateGui()
 				return
 			end
 
+			if data.AdditionalData and data.AdditionalData["Version"] then
+				LSGAOutput = LSGAOutput.." <b>(V: "..data["AdditionalData"].Version..")</b>:\n"
+			else
+				LSGAOutput = LSGAOutput..":\n"
+			end
+
 			for categoryName, animationsList in pairs(data) do
 				if categoryName == "CustomEmotes" and #data["CustomEmotes"] ~= 0 then
 					if DebugInfoEnabled then print("[SpecGameAnims File]: Extracting Animations") end
 					LSGAOutput = LSGAOutput.."CustomEmotes\n"
 					for _, info in ipairs(animationsList) do
 						local danceButton = Instance.new("TextButton")
-						CreateAnimButton(danceButton, info[1], info[2], info[3], info[4])
-						PlayAnim(danceButton, info[5], info[6], info[7], info[8], info[9])
+						CreateAnim(danceButton, info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9])
 					end
 				elseif categoryName == "DefaultAnims" and #data["DefaultAnims"] ~= 0 then
 					if DebugInfoEnabled then print("[SpecGameAnims File]: Adding Default animations") end
@@ -4676,7 +4947,7 @@ local function CreateGui()
 					if DebugInfoEnabled then print("[SpecGameAnims File]: Adding EmoteWhell Data") end
 					LSGAOutput = LSGAOutput.."EmoteWheelEmotes\n"
 					local info = data["EmoteWheelEmotes"]
-					if info.Emote1 then EmoteWheelEmotes.Emote1 = info.Emote1 end
+					EmoteWheelEmotes.Emote1 = info.Emote1
 					if info.Emote2 then EmoteWheelEmotes.Emote2 = info.Emote2 end
 					if info.Emote3 then EmoteWheelEmotes.Emote3 = info.Emote3 end
 					if info.Emote4 then EmoteWheelEmotes.Emote4 = info.Emote4 end
@@ -4701,17 +4972,20 @@ local function CreateGui()
 			end
 		end
 
-		print("Adding data from files...")
 		if LoadGithubCustomAnimsEnabled then
+			LoadingState = "Adding data from Github Additional Anims file"
 			AdditionalAnimsOperation()
 		end
 		if LoadLocalCustomAnimsEnabled then
+			LoadingState = "Adding data from local Custom Anims file"
 			CustomAnimsOperation()
 		end
 		if LoadGithubSGAEnabled then
+			LoadingState = "Adding data from Github SGA file"
 			GithubSpecGameAnimsOperation()
 		end
 		if LoadLocalSGAEnabled then
+			LoadingState = "Adding data from local SGA file"
 			FileSpecGameAnimsOperation()
 		end
 
@@ -4721,9 +4995,10 @@ local function CreateGui()
 	end
 
 	if not IsInStudio then
+		LoadingState = "Adding data from Files"
+		print(LoadingState)
 		AddDataOperation()
 	end
-
 	if DebugInfoEnabled then
 		for index, id in ipairs(ToolActionAnimsList) do
 			print("Position: " .. index .. " | Id: " .. id)
@@ -4750,9 +5025,19 @@ local function CreateGui()
 		AddHoverText(Tip, "Haven't found any animations for this specific game. \nWant to add it yourself? Check out <b>Emoter's Github</b> page!")
 	else
 		AddHoverText(SpecGameSection, "Specific game Animations")
+		if SpecCategoryOnLaunch and FirstLaunch then
+			CurrentSection = "Specific"
+			SpecGameSection.UIStroke.Color = Color3.fromRGB(255, 255, 255)
+			DefaultSection.UIStroke.Color = Color3.fromRGB(0, 0, 0)
+			ScrollingFrameSpecific.Visible = true
+			ScrollingFrame.Visible = false
+			ScrollingFrameR15.Visible = false
+		end
 	end
 
+
 	--Emote wheel
+	LoadingState = "Setting up Emote wheel"
 	local function EmoteWheelButton(Button, AnimButtonName, KeyCode, ActionName)
 		local NumLabel = Instance.new("TextLabel")
 		NumLabel.Parent = Button
@@ -4842,10 +5127,11 @@ local function CreateGui()
 
 	-- UI Decorations
 	local UiCornerParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "ResetButton", "CustomAnimFrame", "PlayAnimButton", "CustomAnimButton", "HotkeysEditOption", "SaveSettingsButton", "LaunchIdDetectorButton", "GithubLinkButton", "HotkeysFrame", "SettingsFrame", "SettingsButton", "GuiTopFrame", "CloseGUI", "DestroyGUI", "GuiBottomFrame", "SpeedValue", "SideFrame", "OpenGUI", "ViewportFrame", "OptionsFrame", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton", "SearchFrame", "SearchButton"}
-	local UiStrokeParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimFrame", "HotkeysFrame", "SettingsFrame", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "ScrollingFrame", "ScrollingFrameR15", "ScrollingFrameSpecific", "OptionsFrame", "SearchFrame"}
+	local UiStrokeParts = {"Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimFrame", "HotkeysFrame", "SettingsFrame", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "ScrollingFrame", "ScrollingFrameR15", "ScrollingFrameSpecific", "OptionsFrame", "SearchFrame"}
 	local UiStroke1Parts = {"ResetButton", "PlayAnimButton", "IdBox", "HotkeysEditOption", "SaveSettingsButton", "LaunchIdDetectorButton", "GithubLinkButton", "SpeedValue", "SearchBox", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton"}
 	local UiGradientParts = {"SpecGameSection", "DefaultSection", "Emote1", "Emote2", "Emote3", "Emote4", "Emote5", "Emote6", "Emote7", "Emote8", "CustomAnimBackButton", "BackButton", "CustomAnimFrame", "PlayAnimButton", "CustomAnimButton", "SettingsButton", "GuiTopFrame", "GuiBottomFrame", "SideFrame", "SettingsButton", "DestroyGUI", "CloseGUI", "OptionsButton", "PauseAnimsButton", "StopDefAnimsButton", "PauseAnimateButton", "SitButton", "EmoteWheelButton", "ReversePlayButton", "SearchFrame", "SearchButton", "BackButton"}
 
+	LoadingState = "Decorating Gui"
 	for _, UiPart in ipairs(Emoter:GetDescendants()) do
 		if table.find(UiCornerParts, UiPart.Name) and UICornerEnabled then
 			local UICorner = Instance.new("UICorner")
@@ -4923,6 +5209,7 @@ local function CreateGui()
 
 
 	--OnRestart things
+	LoadingState = "Restoring before-restart states"
 	if GuiPos ~= nil then
 		SideFrame.Position = GuiPos
 	end
@@ -5017,65 +5304,78 @@ local function CreateGui()
 		end
 		GuiRestarted = true
 	end)
+
+	LoadingState = "Loaded"
 	print("Script loaded!")
 end
 
 function OnRestart()
-	if GuiEmoter.MainFrame.Visible == true then
+	warn("--- Restarting Emoter GUI... ---")
+	if MainFrame.Visible == true then
 		GuiClosed = false
 		GuiPos = GuiEmoter.MainFrame.Position
-	elseif GuiEmoter.SideFrame.Visible == true then
+	elseif SideFrame.Visible == true then
 		GuiClosed = true
 		GuiPos = GuiEmoter.SideFrame.Position
 	end
-	if GuiEmoter.SettingsFrame.Visible == true then
+	if SettingsFrame.Visible == true then
 		SettingsOpened = true
 	else
 		SettingsOpened = false
 	end
 	SettingsPos = GuiEmoter.SettingsFrame.Position
 	if (game:GetService"Players".LocalPlayer.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15) then
-		ScrollingFramePos = GuiEmoter.MainFrame.ScrollingFrameR15.CanvasPosition
+		ScrollingFramePos = ScrollingFrameR15.CanvasPosition
 	else
-		ScrollingFramePos = GuiEmoter.MainFrame.ScrollingFrame.CanvasPosition
+		ScrollingFramePos = ScrollingFrame.CanvasPosition
 	end
-	ScrollingFrameSpecificPos = GuiEmoter.MainFrame.ScrollingFrameSpecific.CanvasPosition
-	if GuiEmoter.MainFrame.OptionsFrame.Visible == true then
+	ScrollingFrameSpecificPos = ScrollingFrameSpecific.CanvasPosition
+	if OptionsFrame.Visible == true then
 		OptionsOpened = true
 	else
 		OptionsOpened = false
 	end
-	if GuiEmoter.MainFrame.ScrollingFrameR15.Visible or GuiEmoter.MainFrame.ScrollingFrame.Visible then
+	if ScrollingFrameR15.Visible or ScrollingFrame.Visible then
 		CurrentSection = "Default"
-	elseif GuiEmoter.MainFrame.ScrollingFrameSpecific.Visible then
+	elseif ScrollingFrameSpecific.Visible then
 		CurrentSection = "Specific"
 	end
 
-	if GuiEmoter.MainFrame.SearchFrame.SearchBox.Visible == true then
+	if SearchBox.Visible == true then
 		SearchOpened = true
 	else
 		SearchOpened = false
 	end
-	if GuiEmoter.MainFrame.CustomAnimFrame.IdBox.Visible == true then
+	if IdBox.Visible == true then
 		CustomAnimOpened = true
 	else
 		CustomAnimOpened = false
 	end
-	PrevAnimSpeedValue = GuiEmoter.MainFrame.GuiBottomFrame.SpeedFrame.SpeedValue.Text
-	PrevSearchText = GuiEmoter.MainFrame.SearchFrame.SearchBox.Text
-	PrevCustomAnimId = GuiEmoter.MainFrame.CustomAnimFrame.IdBox.Text
+	PrevAnimSpeedValue = SpeedFrame.SpeedValue.Text
+	PrevSearchText = SearchBox.Text
+	PrevCustomAnimId = IdBox.Text
 
 	GuiEmoter:Destroy()
 
-	local CreateGuiOk, result = pcall(function()
-		return CreateGui()
-	end)
-	if not CreateGuiOk then
-		if Emoter and not IsInStudio then
-			Emoter:Destroy()
+	local function Create()
+		local CreateGuiOk, result = pcall(function()
+			return CreateGui()
+		end)
+		if not CreateGuiOk then
+			if Emoter and not IsInStudio then
+				Emoter:Destroy()
+			end
+			Notify({Title = "FATAL ERROR!", Text = "An error occured while <b>"..LoadingState.."</b>. Check Dev Console for more info <b>(F9)</b>.\nWould you like to try again?", Time = 15,
+				Choice1Text = "Launch GUI again", 
+				Choice1Function = function()
+					if GuiEmoter then GuiEmoter:Destroy() end
+					Create()
+				end, 
+			})
+			warn("[FATAL ERROR]: "..result)
 		end
-		warn(result)
 	end
+	Create()
 
 	if DebugInfoEnabled then
 		for index, id in ipairs(RestartAnimations) do
@@ -5083,8 +5383,6 @@ function OnRestart()
 		end
 	end
 end
-
-game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Welcome to Emoter Gui!", Text = "Wait for script to load!", Duration = 5, Icon = "rbxassetid://87633233506740"})
 
 --Launching the whole thing
 local CreateGuiOk, result = pcall(function()
@@ -5094,18 +5392,28 @@ if not CreateGuiOk then
 	if Emoter and not IsInStudio then
 		Emoter:Destroy()
 	end
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Fatal Error!", Text = "Check Dev Console for more info (F9)", Duration = 5})
+	Notify({Title = "FATAL ERROR!", Text = "An error occured while <b>"..LoadingState.."</b>. Check Dev Console for more info <b>(F9)</b>", Time = 5})
+	LoadingState = "Loaded"
 	warn("[FATAL ERROR]: "..result)
 else
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Succesfully loaded!", Text = "Check Console for info (F9)", Duration = 5})
-	if LastUsedVersion < ScriptVersion then
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Beta test Available!", Text = "Check Settings no enable", Duration = 5})
+	if not IsBetaBuild then
+		Notify({Title = "Welcome to Emoter Gui!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
+	else
+		Notify({Title = "Welcome to Emoter BETA!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
 	end
-	if LastUsedVersion < ScriptVersion then
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Emoter Updated!", Text = "Check Changelog in my Github", Duration = 5, Icon = "rbxassetid://5832745500"})
+	
+	if LastUsedVersion < ScriptVersion and not IsBetaBuild then
+		Notify({Title = "Emoter updated!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
+			Choice1Function = function() 
+				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
+				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
+			end, 
+			Image = 5832745500, Time = 5})
+	elseif IsBetaBuild then
+		Notify({Title = "Thank you for joining BETA Test!", Text = "This version may be unstable and can have critical bugs. If you encounter any bug, <b>PLEASE</b> feel free to report it in <b>Issues</b> section of my Github project! You can always disable Beta test in settings"})
 	end
 	if LatestVersion > ScriptVersion and not IsBetaBuild then
-		game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Outdated version!", Text = "Please check my Github to get newer version", Duration = 5})
+		Notify({Title = "Outdated version!", Text = "You are using an outdated version of Emoter GUI. Please check my Github to get newer version (link in settings)", Time = 5})
 	end
 end
 if not IsInStudio then

@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.6005
+local ScriptVersion = 5.5905
 local LastUsedVersion = ScriptVersion
 local IsBetaBuild = true
 local LatestVersion = nil

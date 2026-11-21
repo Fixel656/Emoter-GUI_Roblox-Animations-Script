@@ -3774,8 +3774,9 @@ local function CreateGui()
 	AddHoverText(LaunchBetaBuildButton, "Launch Beta Version of Emoter GUI instead of stable version. <b>WARNING!</b> It is highly reccomended to backup any settings and other data from your <b>workspace/EmoterData</b> folder located on your device before using beta version!\nP.S.: Beta version won't launch if stable one is higher")
 	LaunchBetaBuildButton.MouseButton1Click:Connect(function()
 		LaunchBetaBuild = not LaunchBetaBuild
-		if LaunchBetaBuild == true then
-			LaunchBetaBuildButton.CheckImage.Image = "rbxassetid://130396712201457"
+		Notify({Title = "Changed BETA setting", Text = "Please, Destroy Emoter and Launch it again from your executor to change version"})
+		if LaunchBetaBuild then
+			LaunchBetaBuildButton.CheckImage.Image = CheckmarkIcon
 		else
 			LaunchBetaBuildButton.CheckImage.Image = ""
 		end

@@ -1,4 +1,4 @@
-## V5.6 BETA:
+### V5.6:
 - Changed Animations adding functions inside script (doesn't affect ANY SGA, maded mostly for optimizations and to prevent some possible errors to appear later)
 - Added NEW notifications system. Actually, it's taken from Rayfield, but fixed, updated and with new functions
 - Now when a critical error occurs, the state in which it happened is showed. Also you can press "Launch again" button to try launching again

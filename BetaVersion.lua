@@ -5415,6 +5415,9 @@ else
 	if LatestVersion > ScriptVersion and not IsBetaBuild then
 		Notify({Title = "Outdated version!", Text = "You are using an outdated version of Emoter GUI. Please check my Github to get newer version (link in settings)", Time = 5})
 	end
+	if LatestVersion > LatestBetaVersion and IsBetaBuild then
+		Notify({Title = "Outdated BETA!", Text = "Emoter's Stable version is now newer than Beta version. You can switch back to it by disabling BETA Test in settings", Time = 5})
+	end
 end
 if not IsInStudio then
 	SaveData("Update")

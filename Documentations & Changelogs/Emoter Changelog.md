@@ -1,3 +1,6 @@
+### V5.61:
+- Found and fixed a critical bug that makes script stop in start, which happens on *some* executors if you don't have some folders in your Workspace file folder
+
 ### V5.6:
 - Changed Animations adding functions inside script (doesn't affect ANY SGA, maded mostly for optimizations and to prevent some possible errors to appear later)
 - Added NEW notifications system. Actually, it's taken from Rayfield, but fixed, updated and with new functions

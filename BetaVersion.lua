@@ -471,10 +471,8 @@ if not IsInStudio then
 	local fileFound = false
 
 	local success, files = pcall(listfiles, folderPath)
-	if not success then
-		return
-	end
-	for _, filePath in ipairs(files) do
+	if success then
+			for _, filePath in ipairs(files) do
 		local fileName = filePath:match("[^/\\]+$") or filePath
 		local extractedNumber = fileName:match("(%d+)")
 
@@ -487,6 +485,7 @@ if not IsInStudio then
 				break
 			end
 		end
+	end
 	end
 
 	if isfile("EmoterData/EmoterConfig.json") then

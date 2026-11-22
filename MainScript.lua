@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.6
+local ScriptVersion = 5.61
 local LastUsedVersion = ScriptVersion
 local IsBetaBuild = false
 local LatestVersion = nil
@@ -471,20 +471,19 @@ if not IsInStudio then
 	local fileFound = false
 
 	local success, files = pcall(listfiles, folderPath)
-	if not success then
-		return
-	end
-	for _, filePath in ipairs(files) do
-		local fileName = filePath:match("[^/\\]+$") or filePath
-		local extractedNumber = fileName:match("(%d+)")
-
-		if extractedNumber then
-			if extractedNumber == targetNumber then
-				fileFound = true
-				ConfigFile = filePath
-				IsDefaultSettings = false
-				print("Found settings specifically for this game, loading...")
-				break
+	if success then
+		for _, filePath in ipairs(files) do
+			local fileName = filePath:match("[^/\\]+$") or filePath
+			local extractedNumber = fileName:match("(%d+)")
+	
+			if extractedNumber then
+					if extractedNumber == targetNumber then
+					fileFound = true
+					ConfigFile = filePath
+					IsDefaultSettings = false
+					print("Found settings specifically for this game, loading...")
+					break
+				end
 			end
 		end
 	end

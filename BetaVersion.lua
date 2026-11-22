@@ -621,7 +621,8 @@ local function SaveData(Type)
 
 		local success, files = pcall(listfiles, folderPath)
 		if not success then
-			return
+			makefolder(folderPath)
+			success, files = pcall(listfiles, folderPath)
 		end
 		for _, filePath in ipairs(files) do
 			local fileName = filePath:match("[^/\\]+$") or filePath

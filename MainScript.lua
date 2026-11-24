@@ -2,8 +2,9 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.61
+local ScriptVersion = 5.62
 local LastUsedVersion = ScriptVersion
+local LastCheckedBeta = 0.0
 local IsBetaBuild = false
 local LatestVersion = nil
 local LatestBetaVersion = nil
@@ -448,19 +449,21 @@ print("Getting Emoter Metadata...")
 LoadingState = "Preloading"
 if AnalyticsEnabled and not IsInStudio then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Documentations%20%26%20Changelogs/CountHandler.lua",true))() end) end
 -- P.S. This CountHandler made to see how many people are using this script and does NOT collect any other data. BUT if you let AnalyticsEnabled setting enabled you will get rid of one bug where specific settings couldn't load on first script execution
-local MetadataSuccess, MetadataContent = pcall(function()
-	return game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Metadata.json")
-end)
-if not MetadataSuccess or MetadataContent == "404: Not Found" then
-	if DebugInfoEnabled then warn("[AdditionalAnims File]: An error ocurred while trying to get metadata") end
-	ConnectedToInet = false
-	return 
+if not IsInStudio then
+	local MetadataSuccess, MetadataContent = pcall(function()
+		return game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/Metadata.json")
+	end)
+	if not MetadataSuccess or MetadataContent == "404: Not Found" then
+		if DebugInfoEnabled then warn("[AdditionalAnims File]: An error ocurred while trying to connect to GitHub and get metadata") end
+		ConnectedToGithub = false
+	else
+		local MetadataSuccess2, MetadataData = pcall(function()
+			return HttpService:JSONDecode(MetadataContent)
+		end)
+		LatestVersion = MetadataData["LatestVersion"]
+		LatestBetaVersion = MetadataData["LatestBetaVersion"]
+	end
 end
-local MetadataSuccess2, MetadataData = pcall(function()
-	return HttpService:JSONDecode(MetadataContent)
-end)
-LatestVersion = MetadataData["LatestVersion"]
-LatestBetaVersion = MetadataData["LatestBetaVersion"]
 
 --Loading & Saving
 local IsDefaultSettings = true
@@ -475,9 +478,9 @@ if not IsInStudio then
 		for _, filePath in ipairs(files) do
 			local fileName = filePath:match("[^/\\]+$") or filePath
 			local extractedNumber = fileName:match("(%d+)")
-	
+
 			if extractedNumber then
-					if extractedNumber == targetNumber then
+				if extractedNumber == targetNumber then
 					fileFound = true
 					ConfigFile = filePath
 					IsDefaultSettings = false
@@ -492,6 +495,7 @@ if not IsInStudio then
 		local rawData = readfile("EmoterData/EmoterConfig.json")
 		local DecodedSettings = HttpService:JSONDecode(rawData)
 		if DecodedSettings.ConfLastUsedVersion then LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion) else LastUsedVersion = 5.5 end
+		if DecodedSettings.ConfLastCheckedBeta then LastCheckedBeta = DecodedSettings.ConfLastCheckedBeta else LastCheckedBeta = 0.0 end
 		if DecodedSettings.ConfLaunchedTimes then LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes) end
 		if DecodedSettings.ConfTotalTimeUsed then TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed) end
 	end
@@ -558,6 +562,7 @@ end
 local function SaveData(Type)
 	local SettingsToSave = {
 		ConfLastUsedVersion = ScriptVersion,
+		ConfLastCheckedBeta = LastCheckedBeta,
 		ConfLaunchedTimes = LaunchedTimes,
 		ConfTotalTimeUsed = TotalTimeUsed,
 
@@ -651,7 +656,8 @@ local function SaveData(Type)
 		else
 			DecodedData = {}
 		end
-
+		
+		DecodedData.ConfLastCheckedBeta = LatestBetaVersion or LastCheckedBeta
 		DecodedData.ConfLaunchedTimes = LaunchedTimes + 1
 		DecodedData.ConfLastUsedVersion = ScriptVersion
 		DecodedData.ConfTotalTimeUsed = TotalTimeUsed
@@ -5402,16 +5408,19 @@ else
 	else
 		Notify({Title = "Welcome to Emoter BETA!", Text = "Script succesfully loaded!", Image = 87633233506740, Time = 5})
 	end
-	
+
 	if LastUsedVersion < ScriptVersion and not IsBetaBuild then
 		Notify({Title = "Emoter updated!", Text = "Would you like to check Changelog in my Github to see what changes were made?", Choice1Text = "Check Changelog (link)", 
 			Choice1Function = function() 
 				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
 				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
 			end, 
-			Image = 5832745500, Time = 5})
+		Image = 5832745500, Time = 5})
 	elseif IsBetaBuild then
 		Notify({Title = "Thank you for joining BETA Test!", Text = "This version may be unstable and can have critical bugs. If you encounter any bug, <b>PLEASE</b> feel free to report it in <b>Issues</b> section of my Github project! You can always disable Beta test in settings"})
+	end
+	if LastCheckedBeta < LatestBetaVersion and LatestVersion < LatestBetaVersion and not IsBetaBuild then
+		Notify({Title = "A new BETA Version has come out!", Text = "Would you like to check it out? You can always do it by enabling BETA Test in settings", Time = false})
 	end
 	if LatestVersion > ScriptVersion and not IsBetaBuild then
 		Notify({Title = "Outdated version!", Text = "You are using an outdated version of Emoter GUI. Please check my Github to get newer version (link in settings)", Time = 5})

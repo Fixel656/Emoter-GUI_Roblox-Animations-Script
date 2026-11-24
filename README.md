@@ -44,7 +44,7 @@ I will add it manually and type available ones in README. Also you can add files
 - Hotkeys with Double hotkey support
 
 ### To do:
-- Animation Bundles
+- Animation Bundles (**Now in Beta!**)
 - Favorite animations
 - Choosing color by it's HEX or RGB code
 - More R15 animations

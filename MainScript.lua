@@ -5420,8 +5420,12 @@ else
 		Notify({Title = "Thank you for joining BETA Test!", Text = "This version may be unstable and can have critical bugs. If you encounter any bug, <b>PLEASE</b> feel free to report it in <b>Issues</b> section of my Github project! You can always disable Beta test in settings"})
 	end
 	if LastCheckedBeta < LatestBetaVersion and LatestVersion < LatestBetaVersion and not IsBetaBuild then
-		Notify({Title = "A new BETA Version has come out!", Text = "Would you like to check it out? You can always do it by enabling BETA Test in settings", Time = false})
-	end
+		Notify({Title = "New BUNDLE FEATURE in BETA!", Text = "A new feature is now in BETA version! Would you like to check it out? You can always do it by enabling BETA Test in settings", Choice1Text = "Open BETA Version", Choice1Function = function()
+					StopAnimsEvent:Fire("Reset/Destroy")
+					Emoter:Destroy()
+					loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
+					end, Time = false})
+			end
 	if LatestVersion > ScriptVersion and not IsBetaBuild then
 		Notify({Title = "Outdated version!", Text = "You are using an outdated version of Emoter GUI. Please check my Github to get newer version (link in settings)", Time = 5})
 	end

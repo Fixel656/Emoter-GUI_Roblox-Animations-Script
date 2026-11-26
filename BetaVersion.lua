@@ -680,7 +680,7 @@ local function SaveData(Type)
 		else
 			DecodedData = {}
 		end
-		
+
 		if not IsBetaBuild then
 			DecodedData.ConfLastUsedVersion = ScriptVersion
 		else
@@ -769,7 +769,7 @@ local function CreateGui()
 	local RigType = nil
 	local GuiLoaded = false
 	local GuiRestarted = false
-	
+
 	local function WaitForChar()
 		while wait() do 
 			if Player.Character:FindFirstChild("Humanoid") and Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -780,7 +780,7 @@ local function CreateGui()
 		end
 	end
 	WaitForChar()
-	
+
 	local function onStateChanged(_oldState, newState)
 		if not GuiActive or GuiRestarted then return end
 		if newState.Name ~= "Running" then
@@ -803,7 +803,7 @@ local function CreateGui()
 		end
 	end
 	Humanoid.StateChanged:Connect(onStateChanged)
-	
+
 	if (Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15) then
 		RigType = "R15"
 		DefaultScrollingFrame = ScrollingFrameR15
@@ -981,7 +981,7 @@ local function CreateGui()
 		UIStroke.Parent = ViewportFrame
 		UIStroke.Thickness = 5
 		UIStroke.BorderStrokePosition = Enum.BorderStrokePosition.Outer
-		
+
 		local WaitText = Instance.new("TextLabel")
 		WaitText.Parent = ViewportFrame
 		WaitText.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1005,7 +1005,7 @@ local function CreateGui()
 		else
 			targetPosition = Vector3.new(4.6, -1, 12)
 		end
-		
+
 		task.spawn(function()
 			while wait() do
 				if Player.Character then
@@ -1225,7 +1225,7 @@ local function CreateGui()
 		local RunningType = false
 		local IdleType = false
 		local AnimACTIVE = false
-		
+
 		Button:SetAttribute("Looped", LoopedVal)
 		if not LoopedVal then
 			AddHoverText(Button, "Click RMB to loop")
@@ -1245,7 +1245,7 @@ local function CreateGui()
 
 		local AnimLoaded = true
 		task.spawn(function()
-			while wait() do
+			while wait(0.1) do
 				if game:GetService("ContentProvider"):GetAssetFetchStatus(Anim.AnimationId) == Enum.AssetFetchStatus.Success then
 					return
 				elseif game:GetService("ContentProvider"):GetAssetFetchStatus(Anim.AnimationId) == Enum.AssetFetchStatus.Failure then
@@ -1547,7 +1547,7 @@ local function CreateGui()
 		end
 		if tonumber(MinWalkSpeedStr) ~= nil then AddHoverText(Button, "Minimal WalkSpeed to play:"..MinWalkSpeed) end
 		if tonumber(MAXWalkSpeedStr) ~= nil then AddHoverText(Button, "Maximum WalkSpeed to play:"..MAXWalkSpeed) end
-		
+
 		local RunningConnection
 		local IdleConnection
 		local JumpingConnection
@@ -1558,7 +1558,7 @@ local function CreateGui()
 		local PlatformStandingConnection
 		local FallingDownConnection
 		local GettingUpConnection
-		
+
 		RunningConnection = Humanoid.Running:Connect(function(currentSpeed)
 			if not RunningType then return end
 			if GuiActive and not GuiRestarted then
@@ -1585,7 +1585,7 @@ local function CreateGui()
 							AnimWeight = 100
 						end
 					end
-					
+
 					if not IsPlaying then
 						if AnimSmoothFadeEnabled and not HigherPriorityEnabled then
 							track:Play(FadeTime, AnimWeight, (Speed + SpeedNum) * NegativeNumber)
@@ -1594,7 +1594,7 @@ local function CreateGui()
 						end
 						IsPlaying = true
 					end
-					
+
 					if RigType == "R6" then
 						currentSpeed /= Humanoid.Parent:GetScale()
 					end
@@ -1716,7 +1716,7 @@ local function CreateGui()
 				SuspendAnim()
 			end
 		end)
-		
+
 		if not AnimLoaded then
 			RunningConnection:Disconnect()
 			IdleConnection:Disconnect()
@@ -1729,7 +1729,7 @@ local function CreateGui()
 			FallingDownConnection:Disconnect()
 			GettingUpConnection:Disconnect()
 		end
-		
+
 		for index, RestartedAnim in ipairs(RestartAnimations) do
 			local prefix, suffix
 			if string.match(RestartedAnim, "^R15") then
@@ -1777,7 +1777,7 @@ local function CreateGui()
 						ViewportFrame.UIStroke.Color = Color3.new(0.972549, 0.670588, 0.0627451)
 					end
 				end
-				
+
 				if not VPFtrack then
 					ViewportFrame.Visible = true
 					game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
@@ -1788,7 +1788,7 @@ local function CreateGui()
 				VPFtrack:Play(0, 1, (Speed + SpeedNum) * NegativeNumber)
 				ViewportFrame.Visible = true
 				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
-				
+
 				if Type:find("Pause") then
 					local NumberStr = string.match(Type, "Pause([%d%.]+)")
 					local Number = tonumber(NumberStr) or 1
@@ -1902,7 +1902,7 @@ local function CreateGui()
 			end
 			--print("Found copy of Bundle: "..Name)
 		end
-		
+
 		local EquipAllButton = Instance.new("ImageButton")
 		EquipAllButton.Name = Name.."All"
 		EquipAllButton.Parent = ScrollingFrameBundles
@@ -1910,7 +1910,7 @@ local function CreateGui()
 		EquipAllButton.Size = UDim2.new(0, 27, 0, 27)
 		EquipAllButton:SetAttribute("BundleTitle", Title)
 		AddHoverText(EquipAllButton, "Equip All animations")
-		
+
 		local Image = Instance.new("ImageLabel")
 		Image.Parent = EquipAllButton
 		Image.Size = UDim2.new(1, 0, 1, 0)
@@ -1966,7 +1966,7 @@ local function CreateGui()
 				end
 			end
 		end)
-		
+
 		EquipAllButton.Changed:connect(function()
 			if GuiRestarted or not GuiActive or not GuiLoaded then return end
 			if EquipAllButton.BackgroundColor3 == ButtonCol and Active then
@@ -1991,7 +1991,7 @@ local function CreateGui()
 				end
 			end
 		end)
-		
+
 		local function DetectActiveState(child) --A function to detect when EquipAll button need to be active if all anims was equipped manualy
 			if EquipAllButton.Parent == nil then return end
 			if not child:IsA("TextButton") then return end
@@ -2044,7 +2044,7 @@ local function CreateGui()
 		local ClimbingType = false
 		local JumpingType = false
 		local FallingType = false
-		
+
 		local MinWalkSpeedStr = string.match(Type, "Running([%d%.]+)")
 		local MinWalkSpeed = tonumber(MinWalkSpeedStr) or 0.5
 		local MAXWalkSpeedStr = string.match(Type, "Until([%d%.]+)")
@@ -2052,13 +2052,13 @@ local function CreateGui()
 		if not RunningTypeMinSpeedEnabled then
 			MinWalkSpeed = 0.5
 		end
-		
+
 		local HoverText = ""
 		if tonumber(MinWalkSpeedStr) ~= nil then HoverText = HoverText.."Minimal WalkSpeed to play:"..MinWalkSpeed.."  " end
 		if tonumber(MAXWalkSpeedStr) ~= nil then HoverText = HoverText.."Maximum WalkSpeed to play:"..MAXWalkSpeed.."  " end
 		if Type:find("OnJump") then HoverText = HoverText.."(This Animation is playing while jumping)" end
 		AddHoverText(Button, HoverText)
-		
+
 		local JumpAnimDuration = 0.3 --It was 0.31 for R15, but i decided to change it to have same as R6
 		local FallTransitionTime = 0.2
 		local ClimbScale = 5
@@ -2068,7 +2068,7 @@ local function CreateGui()
 			FallTransitionTime = 0.3
 			ClimbScale = 12
 		end
-		
+
 		local SwitchType = ""
 		if Type:find("Running") or Button.Name:find("Run") or Button.Name:find("Walk") then
 			RunningType = true
@@ -2094,7 +2094,7 @@ local function CreateGui()
 			FallingType = true
 			SwitchType = "Fall"
 		end
-		
+
 		local IDTable = nil
 		if type(ID) == "table" then
 			IDTable = ID
@@ -2109,7 +2109,7 @@ local function CreateGui()
 
 		local AnimLoaded = true
 		task.spawn(function() --Check if asset is available
-			while wait() do
+			while wait(0.1) do
 				if game:GetService("ContentProvider"):GetAssetFetchStatus(Anim.AnimationId) == Enum.AssetFetchStatus.Success then
 					return
 				elseif game:GetService("ContentProvider"):GetAssetFetchStatus(Anim.AnimationId) == Enum.AssetFetchStatus.Failure then
@@ -2135,7 +2135,7 @@ local function CreateGui()
 			if not track or track == nil then
 				track = Humanoid:WaitForChild("Animator"):LoadAnimation(Anim)
 			end
-			
+
 			Button:SetAttribute("Looped", LoopedVal)
 			local CurLooped = Button:GetAttribute("Looped")
 			if not CurLooped then
@@ -2170,7 +2170,7 @@ local function CreateGui()
 				track = nil
 			end
 		end)
-		
+
 		local function PlayAnim(TransitionTime)
 			if IsPlaying then return end
 			if track == nil then
@@ -2189,7 +2189,7 @@ local function CreateGui()
 				AnimWeight = 1
 				if Type:find("PriorHigh") then
 					track.Priority = Enum.AnimationPriority.Action4
-					
+
 				elseif Type:find("PriorLow") then
 					track.Priority = Enum.AnimationPriority.Action3
 				end
@@ -2205,7 +2205,7 @@ local function CreateGui()
 				if PauseAnimsOption then
 					track:AdjustSpeed(0)
 				end
-				
+
 				if IdleType and type(IDTable) == "table" then
 					if AltTask ~= nil then AltTask:Disconnect() end
 					AltTask = track.KeyframeReached:Connect(function(FrameName)
@@ -2233,7 +2233,7 @@ local function CreateGui()
 			if not IsPlaying then return end
 			if track == nil then return end
 			if not TransitionTime or TransitionTime == nil then TransitionTime = FadeTime end
-			
+
 			if AnimSmoothFadeEnabled and not HigherPriorityEnabled then
 				track:Stop(TransitionTime)
 			else
@@ -2283,13 +2283,13 @@ local function CreateGui()
 				track:AdjustSpeed(FinalAnimationSpeed)
 			end
 		end
-		
+
 		local function StartAnim()
 			if DebugInfoEnabled then print(BundleName.." - "..Button.Name.." - Id: "..string.match(track.Animation.AnimationId, "%d+")..", AnimLength: "..track.Length..", AnimSpeed: "..track.Speed..", AnimType: "..Type..", Looped: "..tostring(track.Looped)) end
 			if track == nil then
 				SetAnimTrack()
 			end
-			
+
 			if RunAltPressed then
 				if Type:find("Running") or Button.Name:find("Run") or Button.Name:find("Walk") then
 					RunningType = false
@@ -2313,7 +2313,7 @@ local function CreateGui()
 				BundleSwitchModeFactor = true
 				SwitchBundleAnimsEvent:Fire(BundleName, SwitchType, string.match(Button.Name, BundleName.."(%S+)"))
 			end
-			
+
 			--[[if PriorityAltPressed then
 				--Not sure if i'm going to process this for bundle
 			end]]
@@ -2337,7 +2337,7 @@ local function CreateGui()
 			if (RunningType and RunningTypeEnabled and RunningTypeStopStandingEnabled and (not IsRunning or Pose ~= "Stepping")) then return end
 			if (IdleType and IdleTypeEnabled and (IsRunning or Pose ~= "Stepping")) then return end
 			if JumpingType or FallingType or (SwimmingType and Pose ~= "Swimming") or (SwimIdleType and Pose ~= "Swimming") or (ClimbingType and Pose ~= "Climbing") then return end
-			
+
 			local SpeedFromRootPart = Character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude
 			if RunningType or IdleType or SwimmingType or ClimbingType then
 				if RunningType then
@@ -2499,12 +2499,12 @@ local function CreateGui()
 				end
 				if CurrentSpeed > 0.5 and CurrentSpeed >= MinWalkSpeed and CurrentSpeed < MAXWalkSpeed then
 					PlayAnim(FadeTime)
-					
+
 					track:AdjustWeight(AnimWeight, FadeTime)
 					AdjustAnimSpeed(CurrentSpeed/DefaultWalkSpeed)
 				elseif CurrentSpeed > 0.5 and not HigherPriorityEnabled then
 					PlayAnim(FadeTime)
-					
+
 					AdjustAnimSpeed(CurrentSpeed/DefaultWalkSpeed)
 					track:AdjustWeight(0.0001, FadeTime)
 				else
@@ -2567,7 +2567,7 @@ local function CreateGui()
 					SuspendAnim(FallTransitionTime)
 				end
 			end
-			
+
 			if FallingType and not IsPlaying then
 				local FallTask = task.spawn(function()
 					wait(JumpAnimDuration)
@@ -2592,7 +2592,7 @@ local function CreateGui()
 			if (IsPlaying and RunningTypeEnabled and (RunningTypeStopJumpingEnabled and not Type:find("OnJump")) and RunningType and Landed) or (IsPlaying and IdleTypeEnabled and IdleType) or SwimmingType or SwimIdleType or ClimbingType then
 				SuspendAnim(FallTransitionTime)
 			end
-			
+
 			if (FallingType or (RunningType and RunningTypeEnabled and (not RunningTypeStopJumpingEnabled or Type:find("OnJump")))) and not IsJumping then
 				PlayAnim(FallTransitionTime)
 			end
@@ -2606,7 +2606,7 @@ local function CreateGui()
 			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) or JumpingType or FallingType or ClimbingType then
 				SuspendAnim(0.4)
 			end
-			
+
 			if SwimSpeed > 1.00 then
 				if SwimmingType then
 					PlayAnim(0.4)
@@ -2631,13 +2631,13 @@ local function CreateGui()
 			if (IsPlaying and RunningTypeEnabled and RunningTypeStopClimbingEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) or JumpingType or FallingType or SwimmingType or SwimIdleType then
 				SuspendAnim()
 			end
-			
+
 			if ClimbingType then
 				PlayAnim(0.1)
 				AdjustAnimSpeed(ClimbSpeed/ClimbScale)
 			end
 		end)
-		
+
 		Humanoid.Seated:Connect(function()
 			if not AnimACTIVE then return end
 			SuspendAnim(0.5)
@@ -2663,7 +2663,7 @@ local function CreateGui()
 			SwimmingConnection:Disconnect()
 			ClimbingConnection:Disconnect()
 		end
-		
+
 		for index, RestartedAnim in ipairs(RestartAnimations) do
 			local prefix, suffix
 			if string.match(RestartedAnim, "^Bundles") then
@@ -2703,7 +2703,7 @@ local function CreateGui()
 				else
 					ViewportFrame.UIStroke.Color = Color3.new(0.0392157, 0.501961, 1)
 				end
-				
+
 				if not VPFtrack then
 					ViewportFrame.Visible = true
 					game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
@@ -4470,7 +4470,7 @@ local function CreateGui()
 			end
 		end
 	end)
-	
+
 	local function ToolAnimPriorityCheck()
 		if ToolAnimHighPriorEnabled then
 			local playingTracks = Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()
@@ -4802,7 +4802,7 @@ local function CreateGui()
 	--Settings buttons
 	LoadingState = "Loading Settings"
 	local CheckmarkIcon = "rbxassetid://130396712201457"
-	
+
 	SGSNotification.MouseButton2Click:Connect(function()
 		delfile(ConfigFile)
 		Notify({Title = "Deleted", Text = "Deleted specific game settings file", Time = 3})
@@ -4959,7 +4959,7 @@ local function CreateGui()
 			SwitchRunIdleExceptionOptionButton.CheckImage.Image = ""
 		end
 	end)
-	
+
 	local BundleSwitchOptionButton = SettingsStuff.BundleSwitchOption
 	AddHoverText(BundleSwitchOptionButton, "<b>Switching</b> between Bundle animations of the same type (and name if it's Running type) instead of <b>layering</b>. If you press EquippAll button of other bundle while using another, it will stop ALL animations of other bundle")
 	BundleSwitchOptionButton.MouseButton1Click:Connect(function()
@@ -5406,14 +5406,14 @@ local function CreateGui()
 		CreateAnim(Instance.new("TextButton"), "MovingDance", "Moving Dance", "R6", 1, "429703734", .1, 1, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "GoofyDance", "Goofy Dance", "R6", 1, "27789359", .1, 0.8, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "WeirdDance", "Weird Dance", "R6", 1, "28488254", .1, 0.8, "PriorLow", true)
-		
+
 		CreateAnim(Instance.new("TextButton"), "Laugh", "Laugh", "R6", 2, "129423131", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "Cheer", "Cheer", "R6", 2, "129423030", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "Point", "Point", "R6", 2, "128853357", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "Wave", "Wave", "R6", 2, "128777973", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "Dab", "Dab", "R6", 2, "248263260", .1, 1, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "ToolHandle", "Tool Handle", "R6", 2, "125750867", .1, 1, "PriorHigh", true)
-		
+
 		CreateAnim(Instance.new("TextButton"), "Crouch", "Crouch", "R6", 3, "182724289", .1, 1, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "Faint", "Faint", "R6", 3, "181526230", .1, 1, "PriorHigh", true)
 		CreateAnim(Instance.new("TextButton"), "FloorCrawl", "Floor Crawl", "R6", 3, "282574440", .1, 1, "PriorLow", true)
@@ -5423,7 +5423,7 @@ local function CreateGui()
 		CreateAnim(Instance.new("TextButton"), "Scared", "Scared", "R6", 3, "180612465", .1, 0.3, "PriorLowPause", true)
 		CreateAnim(Instance.new("TextButton"), "FloatingHead", "Floating Head", "R6", 3, "121572214", .1, 1, "PriorHigh", true)
 		CreateAnim(Instance.new("TextButton"), "FloatSit", "Float Sit", "R6", 3, "179224234", .5, 1, "PriorLow", true)
-		
+
 		CreateAnim(Instance.new("TextButton"), "Spinner", "Spinner", "R6", 4, "188632011", .1, 2, "PriorHigh", true)
 		CreateAnim(Instance.new("TextButton"), "StrangePos", "Strange Position", "R6", 4, "248336459", .1, 1, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "HeadThrow", "Head Throw", "R6", 4, "35154961", .1, 1, "PriorHigh", false)
@@ -5433,7 +5433,7 @@ local function CreateGui()
 		CreateAnim(Instance.new("TextButton"), "WeirdMove", "Weird Move", "R6", 4, "215384594", .1, 1, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "CloneIllusion", "Clone Illusion", "R6", 4, "215384594", .1, 1e10, "PriorLow", true)
 		CreateAnim(Instance.new("TextButton"), "Insane", "Insane", "R6", 4, "33796059", .1, 1e8, "PriorLow", true)
-		
+
 		CreateAnim(Instance.new("TextButton"), "FullSwing", "Full Swing", "R6", 5, "218504594", .1, 1, "PriorHigh", false)
 		CreateAnim(Instance.new("TextButton"), "NunchakSlash", "Nunchak Slash", "R6", 5, "204292303", .1, 1.5, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "FullPunch", "Full Punch", "R6", 5, "204062532", .1, 1.5, "PriorLow", false)
@@ -5442,7 +5442,7 @@ local function CreateGui()
 		CreateAnim(Instance.new("TextButton"), "HeroJump", "Hero Jump", "R6", 5, "184574340", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "DoubleSlash", "Double Slash", "R6", 5, "35978879", .1, 2, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "SwordSwing", "Sword Swing", "R6", 5, "32659699", .1, 1, "PriorLow", false)
-		
+
 		CreateBundle("Classic", "Classic", "R6")
 		CreateBundleAnim("Classic", "Run", "Run", "180426354", .1, 1, "PriorLowRunning", true)
 		CreateBundleAnim("Classic", "Idle", "Idle", {"180435571", "180435792"}, .1, 1, "PriorLowIdle", true)
@@ -5604,11 +5604,11 @@ local function CreateGui()
 		CreateBundleAnim("DefaultR6", "SwimIdle", "SwimIdle", "110399731107585", .1, 1, "PriorLow", true)
 		CreateBundleAnim("DefaultR6", "Climb", "Climb", "114865095826475", .1, 1.35, "PriorLow", true)
 		CreateBundle("Minecraft", "Minecraft", "R15")--Not complete (Find another Swim Animation)
-		CreateBundleAnim("Minecraft", "Run", "Run", "139117212511545", .19, 0.81, "PriorLowRunningOnJump", true)
+		CreateBundleAnim("Minecraft", "Run", "Run", "86028285109536", .19, 0.92, "PriorLowRunningOnJump", true)
 		--CreateBundleAnim("Minecraft", "Walk", "Walk", "73935678087300", .19, 1, "PriorLowRunningUntil8OnJump", true)
 		CreateBundleAnim("Minecraft", "Idle", "Idle", "105514975554898", .19, 1, "PriorLowIdle", true)
 		CreateBundleAnim("Minecraft", "Swim", "Swim", "72103407662583", .19, 0.7, "PriorLow", true)
-		CreateBundleAnim("Minecraft", "SwimIdle", "SwimIdle", "139117212511545", .19, 0.81, "PriorLow", true)
+		CreateBundleAnim("Minecraft", "SwimIdle", "SwimIdle", "86028285109536", .19, 0.9, "PriorLow", true)
 		CreateBundleAnim("Minecraft", "Climb", "Climb", "119233460706851", .19, 1, "PriorLow", true)
 		CreateBundle("Wheel", "Wheel", "R15")--Not complete
 		CreateBundleAnim("Wheel", "Run", "Run", "116700088132671", .19, 0.7, "PriorLowRunningOnJump", true)
@@ -6113,7 +6113,7 @@ local function CreateGui()
 			AnimButton = ScrollingFrameR6:FindFirstChild(suffix) or ScrollingFrameR6:FindFirstChild("Dance1")
 		elseif prefix == "Spec" then
 			AnimButton = ScrollingFrameSpecific:FindFirstChild(suffix) or DefaultScrollingFrame:FindFirstChild("Dance1")
-			elseif prefix == "Bundle" then
+		elseif prefix == "Bundle" then
 			AnimButton = ScrollingFrameBundles:FindFirstChild(suffix) or DefaultScrollingFrame:FindFirstChild("Dance1")
 		end
 
@@ -6277,7 +6277,7 @@ local function CreateGui()
 	LoadingState = "Restoring before-restart states"
 	Emoter.Enabled = false
 	AddVPF()
-	
+
 	if GuiPos ~= nil then
 		SideFrame.Position = GuiPos
 	end
@@ -6484,7 +6484,7 @@ else
 				setclipboard("https://github.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/blob/main/Documentations%20%26%20Changelogs/Emoter%20Changelog.md")
 				Notify({Title = "Copied", Text = "Copied link to your clipboard!", Time = 3})
 			end, 
-		Image = 5832745500, Time = 5})
+			Image = 5832745500, Time = 5})
 	end
 
 	if not IsInStudio then
@@ -6497,7 +6497,7 @@ else
 					StopAnimsEvent:Fire("Reset/Destroy")
 					Emoter:Destroy()
 					loadstring(game:HttpGet("https://raw.githubusercontent.com/Fixel656/Emoter-GUI_Roblox-Animations-Script/refs/heads/main/BetaVersion.lua",true))()
-					end, Time = false})
+				end, Time = false})
 			end
 			if LatestVersion > ScriptVersion and IsBetaBuild then
 				Notify({Title = "Outdated BETA!", Text = "Emoter's Stable version is now newer than Beta version. Please use loadstring given in Emoter's Github page", Time = 5})

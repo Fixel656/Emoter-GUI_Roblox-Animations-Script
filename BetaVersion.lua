@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.999
+local ScriptVersion = 5.991
 local IsBetaBuild = true
 local LatestVersion = nil
 local LatestBetaVersion = nil
@@ -471,103 +471,115 @@ if not IsInStudio then
 end
 
 --Loading & Saving
+LoadingState = "Loading Settings"
 local IsDefaultSettings = true
 local ConfigFile = "EmoterData/EmoterConfig.json"
-if not IsInStudio then
-	local success, files = pcall(listfiles, "EmoterData") --A test made to avoid an error when listfiles() isn't working in first time
-	
-	local targetNumber = tostring(game.GameId)
-	local folderPath = "EmoterData/SpecificSettings"
-	local fileFound = false
-	local success, files = pcall(listfiles, folderPath)
-	if success then
-		for _, filePath in ipairs(files) do
-			local fileName = filePath:match("[^/\\]+$") or filePath
-			local extractedNumber = fileName:match("(%d+)")
+local function LoadData()
+	if not IsInStudio then
+		local success, files = pcall(listfiles, "EmoterData") --A test made to avoid an error when listfiles() isn't working in first time
 
-			if extractedNumber then
-				if extractedNumber == targetNumber then
-					fileFound = true
-					ConfigFile = filePath
-					IsDefaultSettings = false
-					print("Found settings specifically for this game, loading...")
-					break
+		local targetNumber = tostring(game.GameId)
+		local folderPath = "EmoterData/SpecificSettings"
+		local fileFound = false
+		local success, files = pcall(listfiles, folderPath)
+		if success then
+			for _, filePath in ipairs(files) do
+				local fileName = filePath:match("[^/\\]+$") or filePath
+				local extractedNumber = fileName:match("(%d+)")
+
+				if extractedNumber then
+					if extractedNumber == targetNumber then
+						fileFound = true
+						ConfigFile = filePath
+						IsDefaultSettings = false
+						print("Found settings specifically for this game, loading...")
+						break
+					end
 				end
 			end
 		end
-	end
-	
-	if isfile("EmoterData/Stats_DoNotDelete") then
-		local rawData = readfile("EmoterData/Stats_DoNotDelete")
-		local DecodedSettings = HttpService:JSONDecode(rawData)
-		
-		LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion)
-		LastCheckedBeta = tonumber(DecodedSettings.ConfLastCheckedBeta)
-		LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes)
-		TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed)
-		ChkValues = DecodedSettings.ConfChkValues
-	elseif isfile("EmoterData/EmoterConfig.json") then --Leave here for compatibility with old versions
-		local rawData = readfile("EmoterData/EmoterConfig.json")
-		local DecodedSettings = HttpService:JSONDecode(rawData)
-		if DecodedSettings.ConfLastUsedVersion then LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion) else LastUsedVersion = 5.5 end
-		if DecodedSettings.ConfLaunchedTimes then LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes) end
-		if DecodedSettings.ConfTotalTimeUsed then TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed) end
-	end
-	
-	if isfile(ConfigFile) then
-		local rawData = readfile(ConfigFile)
-		local DecodedSettings = HttpService:JSONDecode(rawData)
 
-		AnimPreviewEnabled = DecodedSettings.ConfAnimPreviewEnabled
-		DebugInfoEnabled = DecodedSettings.ConfDebugInfoEnabled
-		AnalyticsEnabled = DecodedSettings.ConfAnalyticsEnabled
-		LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
-		LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
-		TopMost = DecodedSettings.ConfTopMost
-		if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
-		if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
-		SpecCategoryOnLaunch = DecodedSettings.ConfSpecCategoryOnLaunch
+		if isfile("EmoterData/Stats_DoNotDelete") then
+			local rawData = readfile("EmoterData/Stats_DoNotDelete")
+			local DecodedSettings = HttpService:JSONDecode(rawData)
 
-		ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
-		ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
-		AnimSwitchModeEnabled = DecodedSettings.ConfAnimSwitchModeEnabled
-		AnimSwitchModeRunIdleExceptionEnabled = DecodedSettings.ConfAnimSwitchModeRunIdleExceptionEnabled
-		BundleAnimSwitchModeEnabled = DecodedSettings.ConfBundleAnimSwitchModeEnabled
-		AnimSmoothFadeEnabled = DecodedSettings.ConfAnimSmoothFadeEnabled
-		HigherPriorityEnabled = DecodedSettings.ConfHigherPriorityEnabled
+			LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion)
+			LastCheckedBeta = tonumber(DecodedSettings.ConfLastCheckedBeta)
+			LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes)
+			TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed)
+			ChkValues = DecodedSettings.ConfChkValues
+		elseif isfile("EmoterData/EmoterConfig.json") then --Leave here for compatibility with old versions
+			local rawData = readfile("EmoterData/EmoterConfig.json")
+			local DecodedSettings = HttpService:JSONDecode(rawData)
+			if DecodedSettings.ConfLastUsedVersion then LastUsedVersion = tonumber(DecodedSettings.ConfLastUsedVersion) else LastUsedVersion = 5.5 end
+			if DecodedSettings.ConfLaunchedTimes then LaunchedTimes = tonumber(DecodedSettings.ConfLaunchedTimes) end
+			if DecodedSettings.ConfTotalTimeUsed then TotalTimeUsed = tonumber(DecodedSettings.ConfTotalTimeUsed) end
+		end
 
-		IdleTypeEnabled = DecodedSettings.ConfIdleTypeEnabled
-		RunningTypeEnabled = DecodedSettings.ConfRunningTypeEnabled
-		RunningTypeStopStandingEnabled = DecodedSettings.ConfRunningTypeStopStandingEnabled
-		RunningTypeCharSpeedEnabled = DecodedSettings.ConfRunningTypeCharSpeedEnabled
-		RunningTypeMinSpeedEnabled = DecodedSettings.ConfRunningTypeMinSpeedEnabled
-		RunningTypeStopJumpingEnabled = DecodedSettings.ConfRunningTypeStopJumpingEnabled
-		RunningTypeStopClimbingEnabled = DecodedSettings.ConfRunningTypeStopClimbingEnabled
+		if isfile(ConfigFile) then
+			local rawData = readfile(ConfigFile)
+			local DecodedSettings = HttpService:JSONDecode(rawData)
 
-		Theme = DecodedSettings.ConfTheme
-		UIGradientEnabled = DecodedSettings.ConfUIGradientEnabled
-		UICornerEnabled = DecodedSettings.ConfUICornerEnabled
-		XSize = DecodedSettings.ConfXSize
-		YSize = DecodedSettings.ConfYSize
+			AnimPreviewEnabled = DecodedSettings.ConfAnimPreviewEnabled
+			DebugInfoEnabled = DecodedSettings.ConfDebugInfoEnabled
+			AnalyticsEnabled = DecodedSettings.ConfAnalyticsEnabled
+			LoadAnimationsOnRestart = DecodedSettings.ConfLoadAnimationsOnRestart
+			LoadAllAnimationsOnRestart = DecodedSettings.ConfLoadAllAnimationsOnRestart
+			TopMost = DecodedSettings.ConfTopMost
+			if DecodedSettings.ConfDragDelay then DragDelay = DecodedSettings.ConfDragDelay end
+			if DecodedSettings.ConfLaunchBetaBuild then LaunchBetaBuild = DecodedSettings.ConfLaunchBetaBuild end
+			SpecCategoryOnLaunch = DecodedSettings.ConfSpecCategoryOnLaunch
 
-		LoadGithubSGAEnabled = DecodedSettings.ConfLoadGithubSGAEnabled
-		LoadGithubCustomAnimsEnabled = DecodedSettings.ConfLoadGithubCustomAnimsEnabled
-		LoadLocalSGAEnabled = DecodedSettings.ConfLoadLocalSGAEnabled
-		LoadLocalCustomAnimsEnabled = DecodedSettings.ConfLoadLocalCustomAnimsEnabled
+			ToolIdleAnimHighPriorEnabled = DecodedSettings.ConfToolIdleAnimHighPriorEnabled
+			ToolActionAnimHighPriorEnabled = DecodedSettings.ConfToolActionAnimHighPriorEnabled
+			AnimSwitchModeEnabled = DecodedSettings.ConfAnimSwitchModeEnabled
+			AnimSwitchModeRunIdleExceptionEnabled = DecodedSettings.ConfAnimSwitchModeRunIdleExceptionEnabled
+			BundleAnimSwitchModeEnabled = DecodedSettings.ConfBundleAnimSwitchModeEnabled
+			AnimSmoothFadeEnabled = DecodedSettings.ConfAnimSmoothFadeEnabled
+			HigherPriorityEnabled = DecodedSettings.ConfHigherPriorityEnabled
 
-		HotkeysEnabled = DecodedSettings.ConfHotkeysEnabled
-		if DecodedSettings.ConfDoubleHotkey then DoubleHotkey.Value = tostring(DecodedSettings.ConfDoubleHotkey) end
-		if DecodedSettings.ConfEmoteWheelHotkey then EmoteWheelHotkey.Value = tostring(DecodedSettings.ConfEmoteWheelHotkey) end
-		if DecodedSettings.ConfCloseHotkey then CloseHotkey.Value = tostring(DecodedSettings.ConfCloseHotkey) end
-		if DecodedSettings.ConfSettingsHotkey then SettingsHotkey.Value = tostring(DecodedSettings.ConfSettingsHotkey) end
-		if DecodedSettings.ConfSearchHotkey then SearchHotkey.Value = tostring(DecodedSettings.ConfSearchHotkey) end
-		if DecodedSettings.ConfSitHotkey then SitHotkey.Value = tostring(DecodedSettings.ConfSitHotkey) end
-		if DecodedSettings.ConfSwitchAnimHotkey then SwitchAnimHotkey.Value = tostring(DecodedSettings.ConfSwitchAnimHotkey) end
-		if DecodedSettings.ConfAnimFadeHotkey then AnimFadeHotkey.Value = tostring(DecodedSettings.ConfAnimFadeHotkey) end
-		if DecodedSettings.ConfStopAnimsHotkey then StopAnimsHotkey.Value = tostring(DecodedSettings.ConfStopAnimsHotkey) end
-		if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
+			IdleTypeEnabled = DecodedSettings.ConfIdleTypeEnabled
+			RunningTypeEnabled = DecodedSettings.ConfRunningTypeEnabled
+			RunningTypeStopStandingEnabled = DecodedSettings.ConfRunningTypeStopStandingEnabled
+			RunningTypeCharSpeedEnabled = DecodedSettings.ConfRunningTypeCharSpeedEnabled
+			RunningTypeMinSpeedEnabled = DecodedSettings.ConfRunningTypeMinSpeedEnabled
+			RunningTypeStopJumpingEnabled = DecodedSettings.ConfRunningTypeStopJumpingEnabled
+			RunningTypeStopClimbingEnabled = DecodedSettings.ConfRunningTypeStopClimbingEnabled
+
+			Theme = DecodedSettings.ConfTheme
+			UIGradientEnabled = DecodedSettings.ConfUIGradientEnabled
+			UICornerEnabled = DecodedSettings.ConfUICornerEnabled
+			XSize = DecodedSettings.ConfXSize
+			YSize = DecodedSettings.ConfYSize
+
+			LoadGithubSGAEnabled = DecodedSettings.ConfLoadGithubSGAEnabled
+			LoadGithubCustomAnimsEnabled = DecodedSettings.ConfLoadGithubCustomAnimsEnabled
+			LoadLocalSGAEnabled = DecodedSettings.ConfLoadLocalSGAEnabled
+			LoadLocalCustomAnimsEnabled = DecodedSettings.ConfLoadLocalCustomAnimsEnabled
+
+			HotkeysEnabled = DecodedSettings.ConfHotkeysEnabled
+			if DecodedSettings.ConfDoubleHotkey then DoubleHotkey.Value = tostring(DecodedSettings.ConfDoubleHotkey) end
+			if DecodedSettings.ConfEmoteWheelHotkey then EmoteWheelHotkey.Value = tostring(DecodedSettings.ConfEmoteWheelHotkey) end
+			if DecodedSettings.ConfCloseHotkey then CloseHotkey.Value = tostring(DecodedSettings.ConfCloseHotkey) end
+			if DecodedSettings.ConfSettingsHotkey then SettingsHotkey.Value = tostring(DecodedSettings.ConfSettingsHotkey) end
+			if DecodedSettings.ConfSearchHotkey then SearchHotkey.Value = tostring(DecodedSettings.ConfSearchHotkey) end
+			if DecodedSettings.ConfSitHotkey then SitHotkey.Value = tostring(DecodedSettings.ConfSitHotkey) end
+			if DecodedSettings.ConfSwitchAnimHotkey then SwitchAnimHotkey.Value = tostring(DecodedSettings.ConfSwitchAnimHotkey) end
+			if DecodedSettings.ConfAnimFadeHotkey then AnimFadeHotkey.Value = tostring(DecodedSettings.ConfAnimFadeHotkey) end
+			if DecodedSettings.ConfStopAnimsHotkey then StopAnimsHotkey.Value = tostring(DecodedSettings.ConfStopAnimsHotkey) end
+			if DecodedSettings.ConfResetCharHotkey then ResetCharHotkey.Value = tostring(DecodedSettings.ConfResetCharHotkey) end
+		end
 	end
 end
+local LoadDataOk, result = pcall(function()
+	return LoadData()
+end)
+if not LoadDataOk then
+	Notify({Title = "FATAL ERROR!", Text = "An error occured while <b>"..LoadingState.."</b>. Check Dev Console for more info <b>(F9)</b>", Time = 5})
+	LoadingState = "Loaded"
+	warn("[FATAL ERROR]: "..result)
+end
+
 if ConnectedToGithub and LaunchBetaBuild and not IsBetaBuild and LatestBetaVersion > LatestVersion then
 	warn("LaunchBetaBuild setting enabled and Beta version is higher than stable version, Launching Beta build...")
 	LoadingState = "LaunchingBeta"
@@ -969,6 +981,17 @@ local function CreateGui()
 		UIStroke.Parent = ViewportFrame
 		UIStroke.Thickness = 5
 		UIStroke.BorderStrokePosition = Enum.BorderStrokePosition.Outer
+		
+		local WaitText = Instance.new("TextLabel")
+		WaitText.Parent = ViewportFrame
+		WaitText.AnchorPoint = Vector2.new(0.5, 0.5)
+		WaitText.Size = UDim2.new(1, -10, 1, -10)
+		WaitText.Position = UDim2.new(0.5, 0, 0.5, 0)
+		WaitText.BorderSizePixel = 0
+		WaitText.BackgroundColor3 = Color3.fromRGB(166, 174, 175)
+		WaitText.TextSize = 30
+		WaitText.Text = "Please wait for character to load"
+		WaitText.TextWrapped = true
 
 		local WorldModel = Instance.new("WorldModel")
 		WorldModel.Parent = ViewportFrame
@@ -983,29 +1006,32 @@ local function CreateGui()
 			targetPosition = Vector3.new(4.6, -1, 12)
 		end
 		
-		while wait() do
-			if Player.Character then
-				break
+		task.spawn(function()
+			while wait() do
+				if Player.Character then
+					break
+				end
 			end
-		end
-		wait(0.3)
-		
-		local targetRotation = CFrame.Angles(0, math.rad(20), 0)
-		VPFcam.CFrame = CFrame.new(targetPosition) * targetRotation
-		ViewportFrame.CurrentCamera = VPFcam
-		VPFcam.FieldOfView = 37
-		Character.Archivable = true
-		ClonedChar = Character:Clone()
-		ClonedChar.Name = "VPFCharacter"
-		ClonedChar.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-		ClonedChar.Parent = WorldModel
-		if ClonedChar:FindFirstChild(AnimationHandler) then
-			ClonedChar:FindFirstChild(AnimationHandler):Destroy()
-		end
-		if ClonedChar:FindFirstChildOfClass("Tool") then
-			ClonedChar:FindFirstChildOfClass("Tool"):Destroy()
-		end
-		ClonedChar:SetPrimaryPartCFrame(CFrame.new(Vector3.new(0,0,-0.4), Vector3.new(0,0,7)))
+			wait(0.5)
+
+			local targetRotation = CFrame.Angles(0, math.rad(20), 0)
+			VPFcam.CFrame = CFrame.new(targetPosition) * targetRotation
+			ViewportFrame.CurrentCamera = VPFcam
+			VPFcam.FieldOfView = 37
+			Character.Archivable = true
+			ClonedChar = Character:Clone()
+			ClonedChar.Name = "VPFCharacter"
+			ClonedChar.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+			ClonedChar.Parent = WorldModel
+			if ClonedChar:FindFirstChild(AnimationHandler) then
+				ClonedChar:FindFirstChild(AnimationHandler):Destroy()
+			end
+			if ClonedChar:FindFirstChildOfClass("Tool") then
+				ClonedChar:FindFirstChildOfClass("Tool"):Destroy()
+			end
+			ClonedChar:SetPrimaryPartCFrame(CFrame.new(Vector3.new(0,0,-0.4), Vector3.new(0,0,7)))
+			WaitText.Visible = false
+		end)
 	end
 	--Moved AddVPF() function to end of the function for character to have more time to load	
 
@@ -1406,14 +1432,19 @@ local function CreateGui()
 			Button.UIStroke.Color = Color3.new(0, 0, 0)
 			RemoveEmoteInfo(Button.Name)
 		end
-		local function SuspendAnim()
-			if AnimSmoothFadeEnabled and not HigherPriorityEnabled then
-				track:Stop(FadeTime)
-			else
-				track:Stop(0)
-				track:Stop()
+		local function SuspendAnim(TransitionTime)
+			if TransitionTime == nil then
+				TransitionTime = FadeTime
 			end
-			IsPlaying = false
+			if IsPlaying then
+				if AnimSmoothFadeEnabled and not HigherPriorityEnabled then
+					track:Stop(TransitionTime)
+				else
+					track:Stop(0)
+					track:Stop()
+				end
+				IsPlaying = false
+			end
 		end
 
 		Button.MouseButton1Click:connect(function()
@@ -1519,7 +1550,15 @@ local function CreateGui()
 		
 		local RunningConnection
 		local IdleConnection
-
+		local JumpingConnection
+		local FallingConnection
+		local SwimmingConnection
+		local ClimbingConnection
+		local SeatedConnection
+		local PlatformStandingConnection
+		local FallingDownConnection
+		local GettingUpConnection
+		
 		RunningConnection = Humanoid.Running:Connect(function(currentSpeed)
 			if not RunningType then return end
 			if GuiActive and not GuiRestarted then
@@ -1570,12 +1609,12 @@ local function CreateGui()
 						track:AdjustSpeed(finalAnimationSpeed)
 					end
 				else
-					if IsPlaying and RunningTypeStopStandingEnabled then
+					if RunningTypeStopStandingEnabled then
 						SuspendAnim()
 					end
 				end
 			else
-				if IsPlaying and RunningTypeEnabled then
+				if RunningTypeEnabled then
 					SuspendAnim()
 				end
 			end
@@ -1623,115 +1662,74 @@ local function CreateGui()
 					end
 				end
 			else
-				if IsPlaying and IdleTypeEnabled then
+				if IdleTypeEnabled then
 					SuspendAnim()
 				end
 			end
 		end)
 
+		JumpingConnection = Humanoid.Jumping:Connect(function()
+			if not GuiActive or GuiRestarted then JumpingConnection:Disconnect() return end
+			if (RunningType and RunningTypeEnabled and (RunningTypeStopJumpingEnabled and not Type:find("OnJump"))) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim(0.1)
+			end
+		end)
+		FallingConnection = Humanoid.FreeFalling:Connect(function()
+			if not GuiActive or GuiRestarted then FallingConnection:Disconnect() return end
+			if (RunningType and RunningTypeEnabled and (RunningTypeStopJumpingEnabled and not Type:find("OnJump"))) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim(0.2)
+			end
+		end)
+		SwimmingConnection = Humanoid.Swimming:Connect(function()
+			if not GuiActive or GuiRestarted then SwimmingConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim(0.4)
+			end
+		end)
+		ClimbingConnection = Humanoid.Climbing:Connect(function()
+			if not GuiActive or GuiRestarted then ClimbingConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType and RunningTypeStopClimbingEnabled) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim(0.1)
+			end
+		end)
+		SeatedConnection = Humanoid.Seated:Connect(function()
+			if not GuiActive or GuiRestarted then SeatedConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim(0.5)
+			end
+		end)
+		PlatformStandingConnection = Humanoid.PlatformStanding:Connect(function()
+			if not GuiActive or GuiRestarted then PlatformStandingConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim()
+			end
+		end)
+		FallingDownConnection = Humanoid.FallingDown:Connect(function()
+			if not GuiActive or GuiRestarted then FallingDownConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim()
+			end
+		end)
+		GettingUpConnection = Humanoid.GettingUp:Connect(function()
+			if not GuiActive or GuiRestarted then GettingUpConnection:Disconnect() return end
+			if (RunningTypeEnabled and RunningType) or (IdleTypeEnabled and IdleType) then
+				SuspendAnim()
+			end
+		end)
+		
 		if not AnimLoaded then
 			RunningConnection:Disconnect()
 			IdleConnection:Disconnect()
+			JumpingConnection:Disconnect()
+			FallingConnection:Disconnect()
+			SwimmingConnection:Disconnect()
+			ClimbingConnection:Disconnect()
+			SeatedConnection:Disconnect()
+			PlatformStandingConnection:Disconnect()
+			FallingDownConnection:Disconnect()
+			GettingUpConnection:Disconnect()
 		end
-
-		Humanoid.Swimming:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.Jumping:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType and RunningTypeStopJumpingEnabled) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.FreeFalling:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType and RunningTypeStopJumpingEnabled) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.Climbing:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType and RunningTypeStopClimbingEnabled) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.Seated:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.Died:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.PlatformStanding:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.FallingDown:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-		Humanoid.GettingUp:Connect(function()
-			if (IsPlaying and RunningTypeEnabled and RunningType) or (IsPlaying and IdleTypeEnabled and IdleType) then
-				SuspendAnim()
-			end
-		end)
-
-		local VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
-		local VPFActive = false
-		Button.MouseEnter:connect(function()
-			if not AnimLoaded or IsDragging then return end
-			if AnimPreviewEnabled and not AnimACTIVE then
-				if Type:find("Running") and RunningTypeEnabled then
-					ViewportFrame.UIStroke.Color = Color3.new(0, 0.898039, 0.478431)
-				elseif Type:find("Idle") and IdleTypeEnabled then
-					ViewportFrame.UIStroke.Color = Color3.new(0.741176, 0, 0.890196)
-				elseif Type:find("Pause") then
-					ViewportFrame.UIStroke.Color = Color3.new(0.835294, 0.85098, 0)
-				else
-					if track.Looped == true then
-						ViewportFrame.UIStroke.Color = Color3.new(0.0392157, 0.501961, 1)
-					else
-						ViewportFrame.UIStroke.Color = Color3.new(0.972549, 0.670588, 0.0627451)
-					end
-				end
-
-				VPFActive = true
-				VPFtrack.Looped = true
-				VPFtrack:Play(0, 1, (Speed + SpeedNum) * NegativeNumber)
-				ViewportFrame.Visible = true
-				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
-
-				if Type:find("Pause") then
-					local NumberStr = string.match(Type, "Pause([%d%.]+)")
-					local Number = tonumber(NumberStr) or 1
-
-					local PauseTask = task.spawn(function()
-						wait(Number)
-						VPFtrack:AdjustSpeed(0)
-					end)
-					while wait() do
-						if not VPFActive then
-							task.cancel(PauseTask)
-							return
-						end
-					end
-				end
-			end
-		end)
-
-		Button.MouseLeave:connect(function()
-			if AnimPreviewEnabled then
-				VPFActive = false
-				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 1}):Play()
-				ViewportFrame.Visible = false
-				VPFtrack:Stop()
-			end
-		end)
-
+		
 		for index, RestartedAnim in ipairs(RestartAnimations) do
 			local prefix, suffix
 			if string.match(RestartedAnim, "^R15") then
@@ -1752,6 +1750,71 @@ local function CreateGui()
 				end)
 			end
 		end
+
+		local VPFtrack = nil
+		if ViewportFrame.WorldModel:FindFirstChildOfClass("Model") then
+			VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
+		end
+		ViewportFrame.WorldModel.ChildAdded:Connect(function(Child)
+			if Child:IsA("Model") then
+				VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
+			end
+		end)
+		local VPFActive = false
+		Button.MouseEnter:connect(function()
+			if not AnimLoaded or IsDragging then return end
+			if AnimPreviewEnabled and not AnimACTIVE then
+				if Type:find("Running") and RunningTypeEnabled then
+					ViewportFrame.UIStroke.Color = Color3.new(0, 0.898039, 0.478431)
+				elseif Type:find("Idle") and IdleTypeEnabled then
+					ViewportFrame.UIStroke.Color = Color3.new(0.741176, 0, 0.890196)
+				elseif Type:find("Pause") then
+					ViewportFrame.UIStroke.Color = Color3.new(0.835294, 0.85098, 0)
+				else
+					if LoopedVal == true then
+						ViewportFrame.UIStroke.Color = Color3.new(0.0392157, 0.501961, 1)
+					else
+						ViewportFrame.UIStroke.Color = Color3.new(0.972549, 0.670588, 0.0627451)
+					end
+				end
+				
+				if not VPFtrack then
+					ViewportFrame.Visible = true
+					game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
+					return 
+				end
+				VPFActive = true
+				VPFtrack.Looped = true
+				VPFtrack:Play(0, 1, (Speed + SpeedNum) * NegativeNumber)
+				ViewportFrame.Visible = true
+				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
+				
+				if Type:find("Pause") then
+					local NumberStr = string.match(Type, "Pause([%d%.]+)")
+					local Number = tonumber(NumberStr) or 1
+
+					local PauseTask = task.spawn(function()
+						wait(Number)
+						VPFtrack:AdjustSpeed(0)
+					end)
+					while wait() do
+						if not VPFActive then
+							task.cancel(PauseTask)
+							return
+						end
+					end
+				end
+			end
+		end)
+		Button.MouseLeave:connect(function()
+			if AnimPreviewEnabled then
+				VPFActive = false
+				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 1}):Play()
+				ViewportFrame.Visible = false
+				if not VPFtrack then return end
+				VPFtrack:Stop()
+			end
+		end)
 	end
 
 	local function CreateAnim(Object, Name, Text, Frame, LayoutPos, ID, FadeTime, Speed, Type, LoopedVal, NeedPause)
@@ -2600,38 +2663,7 @@ local function CreateGui()
 			SwimmingConnection:Disconnect()
 			ClimbingConnection:Disconnect()
 		end
-
-		local VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
-		local VPFActive = false
-		Button.MouseEnter:connect(function()
-			if not AnimLoaded or IsDragging then return end
-			if AnimPreviewEnabled and not AnimACTIVE then	
-				if ((RunningType and RunningTypeEnabled) or SwimmingType or ClimbingType) then
-					ViewportFrame.UIStroke.Color = Color3.new(0, 0.807843, 0.027451)
-				elseif ((IdleType and IdleTypeEnabled) or IdleAltType or SwimIdleType) then
-					ViewportFrame.UIStroke.Color = Color3.new(0.607843, 0, 0.847059)
-				elseif JumpingType or FallingType then
-					ViewportFrame.UIStroke.Color = Color3.new(0.890196, 0.866667, 0.239216)
-				else
-					ViewportFrame.UIStroke.Color = Color3.new(0.0392157, 0.501961, 1)
-				end
-
-				VPFActive = true
-				VPFtrack.Looped = true
-				VPFtrack:Play(0, 1, (Speed + SpeedNum) * NegativeNumber)
-				ViewportFrame.Visible = true
-				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
-			end
-		end)
-		Button.MouseLeave:connect(function()
-			if AnimPreviewEnabled then
-				VPFActive = false
-				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 1}):Play()
-				ViewportFrame.Visible = false
-				VPFtrack:Stop()
-			end
-		end)
-
+		
 		for index, RestartedAnim in ipairs(RestartAnimations) do
 			local prefix, suffix
 			if string.match(RestartedAnim, "^Bundles") then
@@ -2648,6 +2680,51 @@ local function CreateGui()
 				end)
 			end
 		end
+
+		local VPFtrack = nil
+		if ViewportFrame.WorldModel:FindFirstChildOfClass("Model") then
+			VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
+		end
+		ViewportFrame.WorldModel.ChildAdded:Connect(function(Child)
+			if Child:IsA("Model") then
+				VPFtrack = ClonedChar:WaitForChild("Humanoid"):LoadAnimation(Anim)
+			end
+		end)
+		local VPFActive = false
+		Button.MouseEnter:connect(function()
+			if not AnimLoaded or IsDragging then return end
+			if AnimPreviewEnabled and not AnimACTIVE then	
+				if ((RunningType and RunningTypeEnabled) or SwimmingType or ClimbingType) then
+					ViewportFrame.UIStroke.Color = Color3.new(0, 0.807843, 0.027451)
+				elseif ((IdleType and IdleTypeEnabled) or IdleAltType or SwimIdleType) then
+					ViewportFrame.UIStroke.Color = Color3.new(0.607843, 0, 0.847059)
+				elseif JumpingType or FallingType then
+					ViewportFrame.UIStroke.Color = Color3.new(0.890196, 0.866667, 0.239216)
+				else
+					ViewportFrame.UIStroke.Color = Color3.new(0.0392157, 0.501961, 1)
+				end
+				
+				if not VPFtrack then
+					ViewportFrame.Visible = true
+					game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
+					return 
+				end
+				VPFActive = true
+				VPFtrack.Looped = true
+				VPFtrack:Play(0, 1, (Speed + SpeedNum) * NegativeNumber)
+				ViewportFrame.Visible = true
+				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 0}):Play()
+			end
+		end)
+		Button.MouseLeave:connect(function()
+			if AnimPreviewEnabled then
+				VPFActive = false
+				game.TweenService:Create(ViewportFrame, TweenInfo.new(.1), {BackgroundTransparency = 1}):Play()
+				ViewportFrame.Visible = false
+				if not VPFtrack then return end
+				VPFtrack:Stop()
+			end
+		end)
 	end
 
 	local function CreateBundleAnim(BundleName, Name, Text, ID, FadeTime, Speed, Type, LoopedVal)
@@ -2735,9 +2812,6 @@ local function CreateGui()
 		else
 			CheckImage.Image = ""
 		end
-
-		--[[local UIStroke = Instance.new("UIStroke")
-		UIStroke.Parent = CheckImage]]
 
 		local UIListLayout = Instance.new("UIListLayout")
 		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -4049,7 +4123,7 @@ local function CreateGui()
 	AddSetting(AnimSwitchModeEnabled, "SwitchOption", "Animations Switch mode", 1)
 	AddSetting(AnimSwitchModeRunIdleExceptionEnabled, "SwitchRunIdleExceptionOption", "Exception for Movement anims", 1)
 	AddSetting(BundleAnimSwitchModeEnabled, "BundleSwitchOption", "Bundle Animations Switch mode", 1)
-	AddSetting(AnimSmoothFadeEnabled, "AnimFadeOption", "Anim smooth Start/Stop", 1)
+	AddSetting(AnimSmoothFadeEnabled, "AnimFadeOption", "Enable Animation's FadeTime", 1)
 	AddSetting(HigherPriorityEnabled, "HigherPriorityOption", "Animations Higher priority", 1)
 
 	AddSetting(IdleTypeEnabled, "IdleTypeOption", "Enable 'Idle' type", 2)

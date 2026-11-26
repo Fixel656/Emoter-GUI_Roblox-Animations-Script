@@ -12,6 +12,8 @@
 - Changed Preview Character loading logic. Now script will load MUCH faster (at least by 0.5 seconds) as the function runs in parallel with the script
 - Other fixes and more
 
+<img width="569" height="360" alt="image" src="https://github.com/user-attachments/assets/a15db179-c943-4225-82c7-27ac75f4cd29" />
+
 ### V5.61 & V5.62:
 - Found and fixed a critical bug that makes script stop in start, which happens on *some* executors if you don't have some folders in your Workspace file folder
 - Added New BETA notification

@@ -2392,7 +2392,7 @@ local function CreateGui()
 			Button.BackgroundColor3 = ButtonCol
 			Button.UIStroke.Thickness = 1
 			Button.UIStroke.Color = Color3.new(0, 0, 0)
-			RemoveEmoteInfo(Button.Name)
+			RemoveEmoteInfo(BundleName.." - "..Button.Name)
 		end
 
 		Button.MouseButton1Click:connect(function()
@@ -5551,7 +5551,16 @@ local function CreateGui()
 		CreateAnim(Instance.new("TextButton"), "QuadPunch", "Quad Punch", "R15", 6, "139643944264511", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "TennaKick", "TennaKick", "R15", 6, "118139885865308", .1, 1, "PriorLow", false)
 		CreateAnim(Instance.new("TextButton"), "Dropkick", "Dropkick", "R15", 6, "133566007754001", .1, 1, "PriorLow", false)
-
+		
+		CreateBundle("Default", "Default", "R15")
+		CreateBundleAnim("Default", "Run", "Run", "913376220", .19, 1, "PriorLowRunning8", true)
+		CreateBundleAnim("Default", "Walk", "Walk", "913402848", .19, 1, "PriorLowRunningUntil8", true)
+		CreateBundleAnim("Default", "Idle", "Idle", {"507766388", "507766666"}, .19, 1, "PriorLowIdle", true)
+		CreateBundleAnim("Default", "Jump", "Jump", "507765000", .19, 1, "PriorLow", false)
+		CreateBundleAnim("Default", "Fall", "Fall", "507767968", .19, 1, "PriorLow", true)
+		CreateBundleAnim("Default", "Swim", "Swim", "913384386", .19, 1, "PriorLow", true)
+		CreateBundleAnim("Default", "SwimIdle", "SwimIdle", "913389285", .19, 1, "PriorLow", true)
+		CreateBundleAnim("Default", "Climb", "Climb", "507765644", .19, 1, "PriorLow", true)
 		CreateBundle("Mini", "Mini", "R15")
 		CreateBundleAnim("Mini", "Run", "Run", "85887415033585", .19, 1.3, "PriorLowRunning", true)
 		CreateBundleAnim("Mini", "Idle", "Idle", "82127055873357", .19, 1, "PriorLowIdle", true)

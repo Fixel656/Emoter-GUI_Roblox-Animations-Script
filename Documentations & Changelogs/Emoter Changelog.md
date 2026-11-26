@@ -3,6 +3,7 @@
 - Along with new big feature, some things, related to Movement animations, was changed to be close to original "Animate" script:
   - Now DefaultWalkSpeed Value is different for each RigType: R15 is set to 16 and R6 is set to 14.5
   - Fade time of most "Running" or "Idle" animations is set to 0.19 (or 0.2)
+  - And more...
 - New Type tags for "Running" type: "Until*Number*" Makes animation play until chosen running speed and "OnJump" Makes animation not to stop when jumping (even if "Stop animation while jumping" setting works)(~~Works only for Bundles for now~~)
 - Now you will be notified if some files won't load properly
 - Now any HoverText or PreviewFrame won't apeear while you're dragging any GUI

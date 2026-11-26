@@ -11,6 +11,7 @@
 - Now tip for Checking Emoter's Github to learn about SGA is changed and is visible only if **EnableLocalSGA** or **EnableGithubSGA** is enabled
 - Removed some unnecessary things ​​from the script
 - Changed Preview Character loading logic. Now script will load MUCH faster (at least by 0.5 seconds) as the function runs in parallel with the script
+- Now Config file is separated by 2 files: one with settings and other for other stats such as Launches count, Last used version, etc. Stats file is one for ALL games
 - Other fixes and more
 
 <img width="569" height="360" alt="image" src="https://github.com/user-attachments/assets/a15db179-c943-4225-82c7-27ac75f4cd29" />

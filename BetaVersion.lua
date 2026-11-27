@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.991
+local ScriptVersion = 5.992
 local IsBetaBuild = true
 local LatestVersion = nil
 local LatestBetaVersion = nil
@@ -709,6 +709,7 @@ local GuiPos = nil
 local SettingsPos = nil
 local ScrollingFramePos = nil
 local ScrollingFrameSpecificPos = nil
+local ScrollingFrameBundlesPos = nil
 local GuiClosed = false
 local OptionsOpened = false
 local SettingsOpened = false
@@ -717,6 +718,8 @@ local PriorityAltPressed = false
 local RunAltPressed = false
 local IdleAltPressed = false
 local IsDragging = false
+local PauseAnimateOption = false
+local StopDefAnimsOption = false
 
 local PrevAnimSpeedValue = ""
 local SearchOpened = false
@@ -729,7 +732,7 @@ local EmoteWheelEmotes = {Emote1 = nil, Emote2 = nil, Emote3 = nil, Emote4 = nil
 
 
 --GUI stuff and tables (Moved most of locales here because of that stupid 200 locales limit in a single function)
-local DefaultAnimsNameList local ToolIdleAnimsList local ToolActionAnimsList local Emoter local MainFrame 
+local DefaultAnimsNameList local ToolIdleAnimsList local ToolActionAnimsList local Emoter local MainFrame local HoverTextContainer
 local ViewportFrame local SideFrame local SideFrameTitle local OpenGUI local SFDestroyGUI
 local GuiTopFrame local DestroyGUI local CloseGUI local Title local GuiBottomFrame
 local SpeedFrame local CurAnimInfoTitle local OptionsButton 
@@ -753,6 +756,7 @@ print("Script version: "..ScriptVersion)
 print("Game Id: "..game.GameId)
 local function CreateGui()
 	print("Loading Emoter GUI...")
+	wait(.1)
 
 	local SpeedNum = 0 --Value, adding to default speed of animation
 	local AnimInfo = Instance.new("StringValue")
@@ -820,6 +824,7 @@ local function CreateGui()
 	ToolActionAnimsList = {"ToolLungeAnim", "ToolSlashAnim", "522638767", "522635514", "129967390", "129967478"}
 
 	Emoter = Instance.new("ScreenGui") --The actual GUI
+	HoverTextContainer = Instance.new("Frame") --Container for all HoverTexts
 	MainFrame = Instance.new("Frame") --All of the stuff on the main frame
 	local MFUIScale = Instance.new("UIScale", MainFrame)
 	ViewportFrame = Instance.new("ViewportFrame") --Frame with animation preview
@@ -1034,7 +1039,27 @@ local function CreateGui()
 		end)
 	end
 	--Moved AddVPF() function to end of the function for character to have more time to load	
-
+	
+	local function AddHTC()
+		HoverTextContainer.Parent = Emoter
+		HoverTextContainer.ZIndex = 1001
+		HoverTextContainer.Size = UDim2.new(0, 10, 0, 10)
+		HoverTextContainer.BackgroundTransparency = 1
+		HoverTextContainer.Name = "HoversContainer"
+		
+		local UIListLayout = Instance.new("UIListLayout")
+		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayout.Wraps = true
+		UIListLayout.Padding = UDim.new(0, 3)
+		UIListLayout.Parent = HoverTextContainer
+		
+		local mouse = Player:GetMouse()
+		mouse.Move:connect(function()
+			HoverTextContainer.Position = UDim2.new(0, mouse.X, 0, mouse.Y + 85)
+		end)
+	end
+	AddHTC()
 	local function AddHoverText(Object, Text, Hotkey)
 		local TextLabel = nil
 		Object.MouseEnter:connect(function()
@@ -1043,12 +1068,12 @@ local function CreateGui()
 			TextLabel.Parent = Emoter
 			TextLabel.Visible = false
 			TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			TextLabel.BackgroundTransparency = 1
+			--TextLabel.BackgroundTransparency = 1
 			TextLabel.AutomaticSize = Enum.AutomaticSize.XY
 			TextLabel.Size = UDim2.new(0, 5, 0, 17)
 			TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-			TextLabel.TextTransparency = 1
+			--TextLabel.TextTransparency = 1
 			TextLabel.TextSize = 17
 			TextLabel.TextWrapped = true
 			TextLabel.Font = Enum.Font.SourceSans
@@ -1076,25 +1101,22 @@ local function CreateGui()
 			local UISizeConstraint = Instance.new("UISizeConstraint")
 			UISizeConstraint.Parent = TextLabel
 			UISizeConstraint.MaxSize = Vector2.new(400, 3000)
+			
+			TextLabel.Size = UDim2.new(0, TextLabel.AbsoluteSize.X, 0, TextLabel.AbsoluteSize.Y)
+			TextLabel.AutomaticSize = Enum.AutomaticSize.None
+			UISizeConstraint:Destroy()
+			TextLabel.Parent = HoverTextContainer
 
-			local UserInputService = game:GetService("UserInputService")
-			local mouse = Player:GetMouse()
-			TextLabel.Position = UDim2.new(0, mouse.X, 0, mouse.Y + 85)
 			TextLabel.Visible = true
-			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 0}):Play()
-			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 0}):Play()
-			mouse.Move:connect(function()
-				TextLabel.Position = UDim2.new(0, mouse.X, 0, mouse.Y + 85)
-			end)
-			-- Add hover text
+			--game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 0}):Play() --Deprecated because now it makes visual glitches when moving quickly between objects
+			--game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 0}):Play()
 		end)
 		Object.MouseLeave:connect(function()
 			if TextLabel == nil then return end
-			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 1}):Play()
-			game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 1}):Play()
-			wait(.06)
+			--game.TweenService:Create(TextLabel, TweenInfo.new(.06), {BackgroundTransparency = 1}):Play()
+			--game.TweenService:Create(TextLabel, TweenInfo.new(.06), {TextTransparency = 1}):Play()
+			--wait(.06)
 			TextLabel:Destroy()
-			-- Destroy hover text
 		end)
 	end
 
@@ -2054,10 +2076,9 @@ local function CreateGui()
 		end
 
 		local HoverText = ""
-		if tonumber(MinWalkSpeedStr) ~= nil then HoverText = HoverText.."Minimal WalkSpeed to play:"..MinWalkSpeed.."  " end
-		if tonumber(MAXWalkSpeedStr) ~= nil then HoverText = HoverText.."Maximum WalkSpeed to play:"..MAXWalkSpeed.."  " end
-		if Type:find("OnJump") then HoverText = HoverText.."(This Animation is playing while jumping)" end
-		AddHoverText(Button, HoverText)
+		if tonumber(MinWalkSpeedStr) ~= nil then AddHoverText(Button, "Minimum WalkSpeed to play:"..MinWalkSpeed) end
+		if tonumber(MAXWalkSpeedStr) ~= nil then AddHoverText(Button, "Maximum WalkSpeed to play:"..MAXWalkSpeed) end
+		if Type:find("OnJump") then AddHoverText(Button, "This Animation is playing while jumping") end
 
 		local JumpAnimDuration = 0.3 --It was 0.31 for R15, but i decided to change it to have same as R6
 		local FallTransitionTime = 0.2
@@ -2257,7 +2278,12 @@ local function CreateGui()
 					if Humanoid then
 						if not Humanoid.AutomaticScalingEnabled then return Humanoid.Parent:GetScale() end
 
-						local AnimationSpeedDampening = Humanoid.Parent:FindFirstChild("Animate").ScaleDampeningPercent.Value or 1 --If found Default AnimHandler script
+						local AnimationSpeedDampening = 1
+						if (Humanoid.Parent:FindFirstChild("Animate") and Humanoid.Parent.Animate:FindFirstChild("ScaleDampeningPercent")) then
+							AnimationSpeedDampening = Humanoid.Parent:FindFirstChild("Animate").ScaleDampeningPercent.Value --If found Default AnimHandler script
+						elseif (Humanoid.Parent:FindFirstChild(AnimationHandler) and Humanoid.Parent[AnimationHandler]:FindFirstChild("ScaleDampeningPercent")) then
+							AnimationSpeedDampening = Humanoid.Parent:FindFirstChild(AnimationHandler).ScaleDampeningPercent.Value
+						end
 						local scale = 1 + (Humanoid.HipHeight - 2) * AnimationSpeedDampening / 2 -- 2 is the default Humanoid.HipHeight taken from Default AnimHandler script
 						return scale
 					end
@@ -3364,8 +3390,10 @@ local function CreateGui()
 	StopDefAnimsButton.Parent = OptionsFrame
 	StopDefAnimsButton.ZIndex = 0
 	if not Player.Character:FindFirstChild(AnimationHandler) then
-		StopDefAnimsButton.ImageTransparency = 0.5
-		StopDefAnimsButton.Interactable = false
+		local Stroke = Instance.new("UIStroke", StopDefAnimsButton)
+		Stroke.Thickness = 2
+		Stroke.BorderStrokePosition = Enum.BorderStrokePosition.Center
+		Stroke.Color = Color3.new(1, 0, 0)
 		AddHoverText(StopDefAnimsButton, "This feature isn't supported on this game. Check Wiki for more info")
 	else
 		AddHoverText(StopDefAnimsButton, "Stop Default Anims. May not work on some games")
@@ -3380,8 +3408,10 @@ local function CreateGui()
 	PauseAnimateButton.Parent = OptionsFrame
 	PauseAnimateButton.ZIndex = 0
 	if not Player.Character:FindFirstChild(AnimationHandler) then
-		PauseAnimateButton.ImageTransparency = 0.5
-		PauseAnimateButton.Interactable = false
+		local Stroke = Instance.new("UIStroke", PauseAnimateButton)
+		Stroke.Thickness = 2
+		Stroke.BorderStrokePosition = Enum.BorderStrokePosition.Center
+		Stroke.Color = Color3.new(1, 0, 0)
 		AddHoverText(PauseAnimateButton, "This feature isn't supported on this game. Check Wiki for more info")
 	else
 		AddHoverText(PauseAnimateButton, "Pause Default Animate Script (will look like you're lagging)")
@@ -4733,28 +4763,50 @@ local function CreateGui()
 			PauseAnimsButton.BackgroundColor3 = ButtonCol
 		end
 	end)
-
-	PauseAnimateButton.MouseButton1Click:Connect(function()
-		local AnimateScript = Player.Character:FindFirstChild(AnimationHandler)
-		if AnimateScript.Disabled == false then
-			AnimateScript.Disabled = true
+	
+	local function PauseAnimateFunction()
+		PauseAnimateOption = not PauseAnimateOption
+		local _, AnimHandler = pcall(function()
+			return Player.Character:FindFirstChild(AnimationHandler)
+		end)
+		if not AnimHandler then
+			Notify({Title = "No Animation Handler found!", Text = "Couldn't find Animation Handler with name '"..AnimationHandler.."' in your Character!", Time = 3})
+			return
+		end
+		if AnimHandler.Disabled == false then
+			AnimHandler.Disabled = true
 			PauseAnimateButton.BackgroundColor3 = ButtonSelectCol
 		else
 			StopAnimsEvent:Fire("Forced")
-			AnimateScript.Disabled = false
+			AnimHandler.Disabled = false
 			PauseAnimateButton.BackgroundColor3 = ButtonCol
 			PauseAnimsOption = false
 			PauseAnimsButton.BackgroundColor3 = ButtonCol
 		end
-	end)
-
-	local StopDefAnimsOption = false
-	StopDefAnimsButton.MouseButton1Click:Connect(function()
+	end
+	PauseAnimateButton.MouseButton1Click:Connect(PauseAnimateFunction)
+	if PauseAnimateOption then
+		PauseAnimateOption = false
+		PauseAnimateFunction()
+	end
+	
+	local function StopDefaultAnimsFunction()
 		StopDefAnimsOption = not StopDefAnimsOption
+		local _, AnimHandler = pcall(function()
+			return Player.Character:FindFirstChild(AnimationHandler)
+		end)
+		if not AnimHandler then
+			AnimHandler = nil
+			if StopDefAnimsOption then
+				Notify({Title = "No Animation Handler found!", Text = "Couldn't find Animation Handler with name '"..AnimationHandler.."' in your Character! Function is still working, but default animations will play again!", Time = 5})
+			end
+		end
 		if StopDefAnimsOption then
 
 			local playingTracks = Player.Character.Humanoid:GetPlayingAnimationTracks()
-			Player.Character.Animate.Disabled = true
+			if AnimHandler then
+				AnimHandler.Disabled = true
+			end
 
 			for _, animtrack in ipairs(playingTracks) do
 				if table.find(DefaultAnimsNameList, animtrack.Name) then
@@ -4768,7 +4820,9 @@ local function CreateGui()
 			PauseAnimateButton.Interactable = false
 		else
 			StopAnimsEvent:Fire("Forced")
-			Player.Character.Animate.Disabled = false
+			if AnimHandler then
+				AnimHandler.Disabled = false
+			end
 			StopDefAnimsButton.BackgroundColor3 = ButtonCol
 
 			PauseAnimsOption = false
@@ -4777,7 +4831,12 @@ local function CreateGui()
 			PauseAnimateButton.ImageTransparency = 0
 			PauseAnimateButton.Interactable = true
 		end
-	end)
+	end
+	StopDefAnimsButton.MouseButton1Click:Connect(StopDefaultAnimsFunction)
+	if StopDefAnimsOption then
+		StopDefAnimsOption = false
+		StopDefaultAnimsFunction()
+	end
 
 	local AnimReversed = false
 	ReversePlayButton.MouseButton1Click:Connect(function()
@@ -6200,34 +6259,35 @@ local function CreateGui()
 	LoadingState = "Decorating Gui"
 	for _, UiPart in ipairs(Emoter:GetDescendants()) do
 		if table.find(UiCornerParts, UiPart.Name) and UICornerEnabled then
-			local UICorner = Instance.new("UICorner")
-			UICorner.Parent = UiPart
-			UICorner.CornerRadius = UDim.new(0, 5)
-			if UiPart.Name == "GuiTopFrame" then
-				UICorner.BottomRightRadius = UDim.new(0, 0)
-				UICorner.BottomLeftRadius = UDim.new(0, 0)
-			elseif UiPart.Name == "GuiBottomFrame" then
-				UICorner.TopLeftRadius = UDim.new(0, 0)
-				UICorner.TopRightRadius = UDim.new(0, 0)
-			elseif UiPart.Parent == EmoteWheel then
-				UICorner.CornerRadius = UDim.new(0, 20)
-			elseif UiPart.Name == "DestroyGUI" then
-				UICorner.CornerRadius = UDim.new(0, 0)
-				UICorner.TopRightRadius = UDim.new(0, 5)
-			elseif UiPart.Name == "CloseGUI" then
-				UICorner.CornerRadius = UDim.new(0, 0)
-				UICorner.TopLeftRadius = UDim.new(0, 5)
+			if not UiPart:FindFirstChildOfClass("UICorner") then 
+				local UICorner = Instance.new("UICorner", UiPart)
+				UICorner.CornerRadius = UDim.new(0, 5)
+				if UiPart.Name == "GuiTopFrame" then
+					UICorner.BottomRightRadius = UDim.new(0, 0)
+					UICorner.BottomLeftRadius = UDim.new(0, 0)
+				elseif UiPart.Name == "GuiBottomFrame" then
+					UICorner.TopLeftRadius = UDim.new(0, 0)
+					UICorner.TopRightRadius = UDim.new(0, 0)
+				elseif UiPart.Parent == EmoteWheel then
+					UICorner.CornerRadius = UDim.new(0, 20)
+				elseif UiPart.Name == "DestroyGUI" then
+					UICorner.CornerRadius = UDim.new(0, 0)
+					UICorner.TopRightRadius = UDim.new(0, 5)
+				elseif UiPart.Name == "CloseGUI" then
+					UICorner.CornerRadius = UDim.new(0, 0)
+					UICorner.TopLeftRadius = UDim.new(0, 5)
+				end
 			end
-
 		end
 
 		if table.find(UiStrokeParts, UiPart.Name) or table.find(UiStroke1Parts, UiPart.Name) then
-			local UIStroke = Instance.new("UIStroke")
-			UIStroke.Parent = UiPart
-			UIStroke.Thickness = 2
-			UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-			if table.find(UiStroke1Parts, UiPart.Name) then
-				UIStroke.Thickness = 1
+			if not UiPart:FindFirstChildOfClass("UIStroke") then
+				local UIStroke = Instance.new("UIStroke", UiPart)
+				UIStroke.Thickness = 2
+				UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				if table.find(UiStroke1Parts, UiPart.Name) then
+					UIStroke.Thickness = 1
+				end
 			end
 		end
 
@@ -6337,6 +6397,9 @@ local function CreateGui()
 	if ScrollingFrameSpecificPos ~= nil then
 		ScrollingFrameSpecific.CanvasPosition = ScrollingFrameSpecificPos
 	end
+	if ScrollingFrameBundlesPos ~= nil then
+		ScrollingFrameBundles.CanvasPosition = ScrollingFrameBundlesPos
+	end
 	SearchBox.Text = PrevSearchText
 	IdBox.Text = PrevCustomAnimId
 	SpeedValue.Text = PrevAnimSpeedValue
@@ -6412,18 +6475,12 @@ function OnRestart()
 		ScrollingFramePos = ScrollingFrameR6.CanvasPosition
 	end
 	ScrollingFrameSpecificPos = ScrollingFrameSpecific.CanvasPosition
+	ScrollingFrameBundlesPos = ScrollingFrameBundles.CanvasPosition
 	if OptionsFrame.Visible == true then
 		OptionsOpened = true
 	else
 		OptionsOpened = false
 	end
-	--[[if ScrollingFrameR15.Visible or ScrollingFrameR6.Visible then
-		CurrentSection = "Default"
-	elseif ScrollingFrameSpecific.Visible then
-		CurrentSection = "Specific"
-	elseif ScrollingFrameBundles.Visible then
-		CurrentSection = "Bundles"
-	end]]
 
 	if SearchBox.Visible == true then
 		SearchOpened = true

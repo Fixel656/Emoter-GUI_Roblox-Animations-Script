@@ -1,4 +1,4 @@
-## V6 BETA (~~V5.999~~ V5.991):
+## V6 BETA (~~V5.999~~ V5.992):
 - **Added new ANIMATION BUNDLES feature! It works just like Animation bundles in Roblox (Running, Walking, Idle, Jumping, Swimming and more), But with more features and more customizable, and you can switch between their animations freely. I will add more information, Tutorials and AIDD functions later**
 - Along with new big feature, some things, related to Movement animations, was changed to be close to original "Animate" script:
   - Now DefaultWalkSpeed Value is different for each RigType: R15 is set to 16 and R6 is set to 14.5
@@ -12,6 +12,8 @@
 - Removed some unnecessary things ​​from the script
 - Changed Preview Character loading logic. Now script will load MUCH faster (at least by 0.5 seconds) as the function runs in parallel with the script
 - Now Config file is separated by 2 files: one with settings and other for other stats such as Launches count, Last used version, etc. Stats file is one for ALL games
+- Fixed an issue for HoverText when test is layering one on another. Now they will be shown in order, but appearing/disappearing animations are now deleted as it will cause visual glitches
+- Emoter now remembers if StopDefaultAnims or PauseAnimHandlerScript options were enabled before restarting. Also now if there's no in-game AnimationHandler can be found, buttons of these options will be marked
 - Other fixes and more
 
 <img width="569" height="360" alt="image" src="https://github.com/user-attachments/assets/a15db179-c943-4225-82c7-27ac75f4cd29" />

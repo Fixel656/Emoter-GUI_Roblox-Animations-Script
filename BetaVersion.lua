@@ -2,7 +2,7 @@
 DO NOT COPY AND CLAIM AS YOUR OWN, if you are using some of the script for your own, 
 credit is highly appreciated!]]
 
-local ScriptVersion = 5.992
+local ScriptVersion = 5.993
 local IsBetaBuild = true
 local LatestVersion = nil
 local LatestBetaVersion = nil
@@ -1194,6 +1194,7 @@ local function CreateGui()
 		elseif Type == "Bundle" then
 			DivideFrame.Parent = ScrollingFrameBundles
 		end
+		return DivideFrame
 	end
 
 	local PlayingEmoteData = {}
@@ -1912,7 +1913,9 @@ local function CreateGui()
 	local function CreateBundle(Name, Title, Type)
 		local Active = false
 		if (Type == "R6" and RigType ~= "R6") or (Type == "R15" and RigType ~= "R15") then return end
-		CreateDivideFrame(Title, 0, "Bundle")
+		local DivideFrame = CreateDivideFrame(Title, 0, "Bundle")
+		DivideFrame:SetAttribute("Bundle", Name)
+		DivideFrame:SetAttribute("BundleTitle", Title)
 
 		if ScrollingFrameBundles:FindFirstChild(Name.."All") then 
 			ScrollingFrameBundles:FindFirstChild(Name.."All"):Destroy()
@@ -4551,8 +4554,9 @@ local function CreateGui()
 						animtrack.Priority = Enum.AnimationPriority.Idle
 						animtrack:AdjustWeight(1)
 					elseif (table.find(ToolActionAnimsList, animtrack.Name) or table.find(ToolActionAnimsList, IdNumberString)) and animtrack.Name ~= "AAnimation" then
-						animtrack.Priority = Enum.AnimationPriority.Action
-						animtrack:AdjustWeight(1)
+						  --Decided to disable it for Action animations as it can cause some priority issues with some of them
+						--animtrack.Priority = Enum.AnimationPriority.Action
+						--animtrack:AdjustWeight(1)
 					end
 				end
 			end
@@ -4602,7 +4606,6 @@ local function CreateGui()
 			SearchButtonClick = true
 		end
 	end)
-
 	if SearchOpened then
 		SearchButton.Visible = false
 		BackButton.Visible = true
@@ -4610,24 +4613,45 @@ local function CreateGui()
 		SFUIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 		SearchFrame.Position = UDim2.new(1, 164, 0, 34)
 	end
-
 	SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
 		for _, ScrollFrame in ipairs(ScrollingFramesList) do
-			for _, Button in ipairs(ScrollFrame:GetDescendants()) do
-				if Button:IsA("TextButton") and string.find(Button.Text:lower(), SearchBox.Text) then
-					Button.Visible = true
-				elseif Button:IsA("TextButton") and not string.find(Button.Text, SearchBox.Text) then
-					Button.Visible = false
-				elseif Button.Name == "DivideFrame" then
-					Button.Visible = false
-				end
-				if SearchBox.Text == "" then
-					if Button:IsA("TextButton") then
-						Button.Visible = true
-					elseif Button.Name == "DivideFrame"  then
-						Button.Visible = true
+			if ScrollFrame.Name == "ScrollingFrameBundles" then
+				for _, Item in ipairs(ScrollFrame:GetChildren()) do
+					if Item:IsA("Frame") and string.find(Item:GetAttribute("BundleTitle"):lower(), SearchBox.Text:lower()) then
+						for _, SubItem in ipairs(ScrollFrame:GetChildren()) do
+							if (SubItem:IsA("ImageButton") and SubItem:GetAttribute("BundleTitle") == Item:GetAttribute("BundleTitle")) or (SubItem:IsA("TextButton") and SubItem:GetAttribute("Bundle") == Item:GetAttribute("Bundle")) then
+								SubItem.Visible = true
+							end
+						end
+						Item.Visible = true
+					elseif Item:IsA("Frame") and not string.find(Item:GetAttribute("BundleTitle"):lower(), SearchBox.Text:lower()) then
+						for _, SubItem in ipairs(ScrollFrame:GetChildren()) do
+							if (SubItem:IsA("ImageButton") and SubItem:GetAttribute("BundleTitle") == Item:GetAttribute("BundleTitle")) or (SubItem:IsA("TextButton") and SubItem:GetAttribute("Bundle") == Item:GetAttribute("Bundle")) then
+								SubItem.Visible = false
+							end
+						end
+						Item.Visible = false
 					end
-
+					if SearchBox.Text == "" then
+						if Item:IsA("TextButton") or Item:IsA("ImageButton") or Item:IsA("Frame") then
+							Item.Visible = true
+						end
+					end
+				end
+			else
+				for _, Button in ipairs(ScrollFrame:GetChildren()) do
+					if Button:IsA("TextButton") and string.find(Button.Text:lower(), SearchBox.Text:lower()) then
+						Button.Visible = true
+					elseif Button:IsA("TextButton") and not string.find(Button.Text:lower(), SearchBox.Text:lower()) then
+						Button.Visible = false
+					elseif Button.Name == "DivideFrame" then
+						Button.Visible = false
+					end
+					if SearchBox.Text == "" then
+						if Button:IsA("TextButton") or Button:IsA("Frame") then
+							Button.Visible = true
+						end
+					end
 				end
 			end
 		end
